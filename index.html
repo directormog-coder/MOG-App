@@ -9,110 +9,76 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;900&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --gold: #D4AF37; 
-            --blue: #00d2ff; 
-            --bg: #050505; 
-            --panel: rgba(10, 10, 10, 0.9); 
-        }
+        :root { --gold: #D4AF37; --blue: #00d2ff; --bg: #050505; --panel: rgba(10, 10, 10, 0.9); }
         body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; margin: 0; }
         .serif { font-family: 'Cinzel', serif; }
-        
-        /* Gold & Blue Text Shimmer */
         .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .blue-glow { text-shadow: 0 0 10px var(--blue), 0 0 20px rgba(0, 210, 255, 0.3); color: var(--blue); }
+        .blue-glow { text-shadow: 0 0 10px var(--blue); color: var(--blue); }
 
-        /* The Interactive Grid */
-        #main-grid { position: relative; z-index: 100; }
-        
+        /* Fixed Clickable Tiles */
         .glass-tile { 
             background: var(--panel); 
             border: 1px solid rgba(0, 210, 255, 0.2); 
             box-shadow: inset 0 0 15px rgba(0, 210, 255, 0.05);
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            transition: all 0.2s ease; 
             cursor: pointer; 
-            border-radius: 2px;
-            position: relative;
-            overflow: hidden;
-            pointer-events: auto; /* Ensures clickability */
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10;
         }
-        
-        /* Tactical Feedback on Tap */
-        .glass-tile:active { 
-            transform: scale(0.92); 
-            border-color: var(--blue); 
-            box-shadow: 0 0 20px rgba(0, 210, 255, 0.4); 
-        }
-        
-        .glass-tile::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--blue), transparent);
-            opacity: 0.3;
-        }
+        .glass-tile:active { transform: scale(0.95); border-color: var(--blue); background: rgba(0, 210, 255, 0.1); }
 
         .modal { 
             display: none; position: fixed; inset: 0; 
-            background: rgba(0,0,0,0.95); z-index: 1000; 
-            backdrop-filter: blur(20px); align-items: center; 
+            background: rgba(0,0,0,0.98); z-index: 1000; 
+            backdrop-filter: blur(25px); align-items: center; 
             justify-content: center; opacity: 0; transition: 0.3s; 
         }
         .modal.active { display: flex; opacity: 1; }
         
-        #neural-canvas { 
-            width: 100%; height: 100px; 
-            border-bottom: 1px solid rgba(0, 210, 255, 0.1); 
-            margin-bottom: 2rem;
-            pointer-events: none; /* Prevents canvas from blocking clicks */
+        /* Auth Buttons */
+        .auth-btn { 
+            width: 100%; border: 1px solid var(--blue); padding: 16px; 
+            font-size: 10px; font-weight: 900; letter-spacing: 0.2em; 
+            color: var(--blue); margin-bottom: 12px; transition: 0.3s;
         }
-
-        .director-tile { border: 1px solid var(--gold) !important; box-shadow: 0 0 15px rgba(212, 175, 55, 0.2) !important; }
+        .auth-btn:hover { background: var(--blue); color: #000; }
         
-        /* Status Dot Blue Pulse */
-        #status-dot.online { background: var(--blue); box-shadow: 0 0 8px var(--blue); animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        input { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(0, 210, 255, 0.3) !important; color: #fff !important; padding: 12px; font-size: 10px; margin-bottom: 10px; width: 100%; }
     </style>
 </head>
 <body>
-    <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-[200]">
-        <div class="serif text-2xl gold-text cursor-pointer" onclick="location.reload()">M.O.G.</div>
-        <div id="auth-status" class="text-[7px] tracking-[0.5em] text-zinc-500 flex items-center gap-2 uppercase">
-            NETWORK: <span id="admin-status" class="blue-glow">ACTIVE</span> <div class="w-1.5 h-1.5 rounded-full online" id="status-dot"></div>
+    <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
+        <div class="serif text-2xl gold-text">M.O.G.</div>
+        <div class="text-[7px] tracking-[0.5em] text-zinc-500 uppercase">
+            NETWORK: <span class="blue-glow">ACTIVE</span>
         </div>
     </nav>
 
     <main class="relative z-10 pt-28 px-8 max-w-lg mx-auto text-center">
-        <h1 class="serif text-4xl gold-text mb-2 italic tracking-tighter">MANIFEST</h1>
-        <div id="neural-canvas"></div>
+        <h1 class="serif text-4xl gold-text mb-12 italic tracking-tighter">MANIFEST</h1>
         
-        <div class="grid grid-cols-2 gap-4" id="main-grid">
-            <div onclick="UI.open('auth')" class="glass-tile py-10">
+        <div class="grid grid-cols-2 gap-4">
+            <div onclick="UI.open('auth')" class="glass-tile py-12">
                 <div class="text-[10px] font-black text-white uppercase tracking-[0.3em]">Identity</div>
             </div>
-            <div onclick="UI.open('files')" class="glass-tile py-10">
+            <div onclick="UI.open('files')" class="glass-tile py-12">
                 <div class="text-[10px] font-black text-white uppercase tracking-[0.3em]">Binary Store</div>
             </div>
-            <div onclick="UI.open('comms')" class="glass-tile py-10">
+            <div onclick="UI.open('comms')" class="glass-tile py-12">
                 <div class="text-[10px] font-black text-white uppercase tracking-[0.3em]">Transmit</div>
             </div>
-            <div onclick="UI.open('global')" class="glass-tile py-10">
+            <div onclick="UI.open('global')" class="glass-tile py-12">
                 <div class="text-[10px] font-black text-white uppercase tracking-[0.3em]">Global Log</div>
             </div>
-        </div>
-
-        <div class="mt-12 flex justify-between text-[7px] text-zinc-600 tracking-widest uppercase">
-            <span onclick="System.decommission()" class="cursor-pointer hover:text-red-500">>> Wipe Local</span>
-            <span>Ver. 6.0.0_Blue_Restored</span>
         </div>
     </main>
 
     <div id="modal" class="modal">
         <div class="p-8 w-full max-w-md text-center">
-            <h2 id="m-title" class="serif text-3xl gold-text mb-1 italic"></h2>
-            <div id="m-body" class="text-[9px] tracking-[0.4em] text-blue-400 uppercase mb-8 border-b border-blue-900/30 pb-4"></div>
+            <h2 id="m-title" class="serif text-3xl gold-text mb-2 italic"></h2>
+            <div id="m-body" class="text-[8px] tracking-[0.4em] text-blue-400 uppercase mb-8 border-b border-blue-900/30 pb-4"></div>
             <div id="m-action-container"></div>
-            <button onclick="UI.close()" class="mt-12 text-[8px] text-zinc-600 tracking-[0.5em] uppercase hover:text-blue-400 transition-all">Terminate Link</button>
+            <button onclick="UI.close()" class="mt-8 text-[8px] text-zinc-600 tracking-[0.5em] uppercase">Terminate Link</button>
         </div>
     </div>
 
@@ -121,35 +87,18 @@
         const S_KEY = 'YOUR_SUPABASE_ANON_KEY';
         const supabase = window.supabase.createClient(S_URL, S_KEY);
 
-        const Sound = {
-            ctx: null,
-            init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-            play(f, d = 0.08) {
-                this.init();
-                if (this.ctx.state === 'suspended') this.ctx.resume();
-                const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
-                o.type = 'sine'; o.frequency.setValueAtTime(f, this.ctx.currentTime);
-                g.gain.setValueAtTime(0.02, this.ctx.currentTime);
-                o.connect(g); g.connect(this.ctx.destination);
-                o.start(); o.stop(this.ctx.currentTime + d);
-            }
-        };
-
         const UI = {
             open: (node) => {
-                Sound.play(880);
-                const modal = document.getElementById('modal');
-                modal.style.display = 'flex';
-                setTimeout(() => modal.classList.add('active'), 10);
+                document.getElementById('modal').style.display = 'flex';
+                setTimeout(() => document.getElementById('modal').classList.add('active'), 10);
                 
-                if(node === 'auth') Auth.check();
-                if(node === 'files') UI.render("BINARY STORE", "Encrypted Vault", "<p class='text-zinc-600'>NO DATA FOUND</p>");
-                if(node === 'global') UI.render("GLOBAL LOG", "Network Frequency", "<p class='text-zinc-600'>SCANNING...</p>");
+                if(node === 'auth') Auth.showGateway();
+                if(node === 'files') UI.render("BINARY STORE", "Encrypted Vault", "<p class='text-zinc-500'>RESTRICTED ACCESS</p>");
+                if(node === 'global') UI.render("GLOBAL LOG", "Network Activity", "<p class='text-zinc-500'>SCANNING FREQUENCIES...</p>");
             },
-            close: () => { 
-                const modal = document.getElementById('modal');
-                modal.classList.remove('active');
-                setTimeout(() => modal.style.display = 'none', 300);
+            close: () => {
+                document.getElementById('modal').classList.remove('active');
+                setTimeout(() => document.getElementById('modal').style.display = 'none', 300);
             },
             render: (t, b, a = "") => {
                 document.getElementById('m-title').innerText = t;
@@ -159,55 +108,47 @@
         };
 
         const Auth = {
-            user: null,
-            init: async () => {
-                const { data } = await supabase.auth.getSession();
-                if(!data.session) await supabase.auth.signInAnonymously();
-                
-                supabase.auth.onAuthStateChange(async (_, s) => {
-                    Auth.user = s?.user;
-                    if(Auth.user && Auth.user.email === 'director.mog@gmail.com') {
-                        Director.injectPanel();
-                        document.getElementById('admin-status').innerText = "DIRECTOR";
-                    }
-                });
+            showGateway: () => {
+                UI.render("IDENTITY", "Select Access Protocol", `
+                    <button onclick="Auth.showLogin()" class="auth-btn">RECONNECT (LOGIN)</button>
+                    <button onclick="Auth.showRegister()" class="auth-btn">JOIN GRID (REGISTER)</button>
+                `);
             },
-            check: async () => {
-                const { data } = await supabase.from('operatives').select('*').eq('id', Auth.user.id).single();
-                if(data) {
-                    UI.render(data.alias, "Identity Confirmed");
-                } else {
-                    UI.render("IDENTITY", "Unregistered User", `<input id="a-in" placeholder="NEW ALIAS"><button onclick="Auth.reg()" class="w-full bg-blue-500/20 border border-blue-500 text-blue-400 py-4 text-[10px] mt-4">INITIALIZE</button>`);
-                }
+            showLogin: () => {
+                UI.render("LOGIN", "Enter Credentials", `
+                    <input type="email" id="email" placeholder="EMAIL">
+                    <input type="password" id="pass" placeholder="PASSWORD">
+                    <button onclick="Auth.handleLogin()" class="auth-btn !bg-blue-500 !text-black border-none">AUTHENTICATE</button>
+                    <button onclick="Auth.showGateway()" class="text-[8px] text-zinc-500 uppercase mt-4">Back</button>
+                `);
             },
-            reg: async () => {
-                const alias = document.getElementById('a-in').value.toUpperCase();
-                if(alias) {
-                    await supabase.from('operatives').insert([{ id: Auth.user.id, alias }]);
-                    Auth.check();
+            showRegister: () => {
+                UI.render("REGISTER", "Create Operative Profile", `
+                    <input type="text" id="alias" placeholder="ALIAS (NAME)">
+                    <input type="email" id="email" placeholder="EMAIL">
+                    <input type="password" id="pass" placeholder="PASSWORD">
+                    <button onclick="Auth.handleReg()" class="auth-btn !bg-blue-500 !text-black border-none">INITIALIZE</button>
+                    <button onclick="Auth.showGateway()" class="text-[8px] text-zinc-500 uppercase mt-4">Back</button>
+                `);
+            },
+            handleLogin: async () => {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('pass').value;
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if(error) alert(error.message); else UI.close();
+            },
+            handleReg: async () => {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('pass').value;
+                const alias = document.getElementById('alias').value;
+                const { data, error } = await supabase.auth.signUp({ email, password });
+                if(data.user) {
+                    await supabase.from('operatives').insert([{ id: data.user.id, alias: alias.toUpperCase() }]);
+                    UI.close();
                 }
+                if(error) alert(error.message);
             }
         };
-
-        const Director = {
-            injectPanel: () => {
-                if(document.getElementById('dir-tile')) return;
-                const grid = document.getElementById('main-grid');
-                const tile = document.createElement('div');
-                tile.id = 'dir-tile';
-                tile.className = 'glass-tile py-10 col-span-2 director-tile';
-                tile.onclick = () => UI.open('director');
-                tile.innerHTML = `<div class="text-[10px] font-black text-gold uppercase tracking-[0.3em]">Director's Console</div>`;
-                grid.appendChild(tile);
-            }
-        };
-
-        const System = {
-            decommission: async () => { if(confirm("Purge Local Session?")) { await supabase.auth.signOut(); location.reload(); } }
-        };
-
-        Auth.init();
-        window.addEventListener('click', () => Sound.init(), {once: true});
     </script>
 </body>
 </html>
