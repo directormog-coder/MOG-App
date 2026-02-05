@@ -19,37 +19,39 @@
         .modal.active { display: flex; opacity: 1; }
         .log-entry { border-left: 2px solid var(--gold); padding: 10px; margin-bottom: 12px; background: rgba(212,175,55,0.03); text-align: left; font-size: 10px; }
         #neural-canvas { width: 100%; height: 120px; background: rgba(212, 175, 55, 0.02); border: 1px solid rgba(212, 175, 55, 0.1); position: relative; overflow: hidden; }
-        .node-pulse { width: 4px; height: 4px; background: var(--gold); border-radius: 50%; position: absolute; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
         input, textarea { background: rgba(255,255,255,0.02) !important; border: 1px solid rgba(212,175,55,0.2) !important; color: #fff !important; padding: 12px; width: 100%; font-size: 10px; outline: none; }
+        .director-glow { text-shadow: 0 0 10px var(--gold); }
     </style>
 </head>
 <body id="terminal-body">
     <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
         <div class="serif text-2xl gold-text cursor-pointer" onclick="location.reload()">M.O.G.</div>
-        <div id="auth-status" class="text-[7px] tracking-[0.5em] text-zinc-500 flex items-center gap-2">
-            GRID: <span id="online-count">1</span> | <span id="admin-status">OPERATIVE</span> <div class="w-1.5 h-1.5 rounded-full bg-zinc-800" id="status-dot"></div>
+        <div id="auth-status" class="text-[7px] tracking-[0.5em] text-zinc-500 flex items-center gap-2 uppercase">
+            GRID: <span id="online-count">1</span> | <span id="admin-status">INITIATING...</span> <div class="w-1.5 h-1.5 rounded-full bg-zinc-800" id="status-dot"></div>
         </div>
     </nav>
+
     <main class="relative z-10 pt-28 px-8 max-w-lg mx-auto text-center">
         <h1 class="serif text-4xl gold-text mb-2 italic tracking-tighter">MANIFEST</h1>
         <div id="neural-canvas" class="mb-6"><div id="constellation" class="w-full h-full relative"></div></div>
+        
         <div class="grid grid-cols-2 gap-4">
             <div onclick="UI.open('auth')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Identity</div></div>
             <div onclick="UI.open('files')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Binary Store</div></div>
             <div onclick="UI.open('comms')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Transmit</div></div>
             <div onclick="UI.open('global')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Global Log</div></div>
         </div>
+
         <div class="mt-8 flex justify-between text-[7px] text-zinc-700 tracking-widest uppercase px-2">
             <span onclick="System.decommission()" class="cursor-pointer hover:text-red-600">>> Wipe Local</span>
-            <span>Ver. 5.2.0_Asili</span>
+            <span>Ver. 5.3.0_Director</span>
         </div>
     </main>
 
     <div id="modal" class="modal"><div class="p-8 w-full max-w-md text-center"><h2 id="m-title" class="serif text-3xl gold-text mb-1 italic"></h2><div id="m-body" class="text-[9px] tracking-[0.4em] text-zinc-500 uppercase mb-8 border-b border-gold/10 pb-4"></div><div id="m-action-container"></div><button onclick="UI.close()" class="mt-12 text-[8px] text-zinc-600 tracking-[0.5em] uppercase hover:text-white transition-all">Terminate Link</button></div></div>
 
     <script>
-        // Replace with your actual credentials
+        // --- CONFIGURATION ---
         const S_URL = 'YOUR_SUPABASE_URL';
         const S_KEY = 'YOUR_SUPABASE_ANON_KEY';
         const supabase = window.supabase.createClient(S_URL, S_KEY);
@@ -73,6 +75,7 @@
                 if(node === 'auth') Auth.check();
                 if(node === 'files') Files.load();
                 if(node === 'global') Global.load();
+                if(node === 'comms') UI.render("TRANSMIT", "Peer-to-Peer messaging coming soon.");
             },
             close: () => { document.getElementById('modal').classList.remove('active'); Typer.stop(); },
             render: (t, b, a = "") => {
@@ -107,9 +110,21 @@
                 supabase.auth.onAuthStateChange(async (_, s) => {
                     Auth.user = s?.user || null;
                     if(Auth.user) {
-                        const { data: op } = await supabase.from('operatives').select('is_admin').eq('id', Auth.user.id).single();
-                        Auth.isAdmin = op?.is_admin || false;
-                        document.getElementById('admin-status').innerText = Auth.isAdmin ? "ADMIN_ACCESS" : "OPERATIVE";
+                        const { data: op } = await supabase.from('operatives').select('alias, is_admin').eq('id', Auth.user.id).single();
+                        
+                        const isDirector = Auth.user.email === 'director.mog@gmail.com';
+                        Auth.isAdmin = op?.is_admin || isDirector;
+
+                        const statusEl = document.getElementById('admin-status');
+                        const dot = document.getElementById('status-dot');
+
+                        if (isDirector) {
+                            statusEl.innerHTML = "<span class='text-gold director-glow'>DIRECTOR_MODE</span>";
+                            dot.style.background = "#D4AF37";
+                        } else {
+                            statusEl.innerText = Auth.isAdmin ? "ADMIN_ACCESS" : "OPERATIVE";
+                            dot.style.background = Auth.isAdmin ? "#D4AF37" : "#22c55e";
+                        }
                         Network.heartbeat();
                     }
                 });
@@ -134,25 +149,21 @@
 
         const Network = {
             heartbeat: async () => {
-                await supabase.from('operatives').update({ last_seen: new Date().toISOString() }).eq('id', Auth.user.id);
-                Network.refresh();
-            },
-            refresh: async () => {
-                const ago = new Date(Date.now() - 10 * 60000).toISOString();
-                const { count } = await supabase.from('operatives').select('*', { count: 'exact', head: true }).gt('last_seen', ago);
+                if(Auth.user) await supabase.from('operatives').update({ last_seen: new Date().toISOString() }).eq('id', Auth.user.id);
+                const { count } = await supabase.from('operatives').select('*', { count: 'exact', head: true }).gt('last_seen', new Date(Date.now() - 300000).toISOString());
                 document.getElementById('online-count').innerText = count || 1;
             }
         };
 
         const Files = {
             load: async () => {
-                UI.render("BINARY STORE", "Encrypted Data Packets", `<div id="file-list" class="mb-4"></div><input type="file" id="file-in" class="hidden" onchange="Files.upload()"><button onclick="document.getElementById('file-in').click()" class="w-full border border-gold text-gold py-4 text-[9px] font-bold">UPLOAD BINARY</button>`);
+                UI.render("BINARY STORE", "Private Asset Vault", `<div id="file-list" class="mb-4 space-y-2"></div><input type="file" id="file-in" class="hidden" onchange="Files.upload()"><button onclick="document.getElementById('file-in').click()" class="w-full border border-gold text-gold py-4 text-[9px] font-bold">UPLOAD DATA</button>`);
                 const { data } = await supabase.storage.from('manifest-store').list(Auth.user.id);
-                document.getElementById('file-list').innerHTML = data?.map(f => `<div class="log-entry flex justify-between"><span>${f.name}</span> <a href="${S_URL}/storage/v1/object/public/manifest-store/${Auth.user.id}/${f.name}" target="_blank" class="text-gold">OPEN</a></div>`).join('') || "NO FILES DETECTED";
+                document.getElementById('file-list').innerHTML = data?.map(f => `<div class="log-entry flex justify-between"><span>${f.name}</span> <a href="${S_URL}/storage/v1/object/public/manifest-store/${Auth.user.id}/${f.name}" target="_blank" class="text-gold">OPEN</a></div>`).join('') || "NO DATA PACKETS FOUND";
             },
             upload: async () => {
                 const file = document.getElementById('file-in').files[0];
-                if(file) {
+                if(file && Auth.user) {
                     await supabase.storage.from('manifest-store').upload(`${Auth.user.id}/${file.name}`, file);
                     Files.load();
                 }
@@ -161,33 +172,31 @@
 
         const Global = {
             load: async () => {
-                UI.render("GLOBAL LOG", "Broadcast Feed", `<div id="g-list" class="mb-4"></div><textarea id="g-in" placeholder="BROADCAST..."></textarea><button onclick="Global.post()" class="w-full bg-[#D4AF37] text-black py-4 font-black text-[10px] mt-2">EMIT SIGNAL</button>`);
-                const { data } = await supabase.from('global_log').select('*, from:operatives!user_id(alias)').order('created_at', { ascending: false }).limit(5);
+                UI.render("GLOBAL LOG", "Network Broadcast", `<div id="g-list" class="mb-4 max-h-[200px] overflow-y-auto"></div><textarea id="g-in" placeholder="EMIT SIGNAL..."></textarea><button onclick="Global.post()" class="w-full bg-[#D4AF37] text-black py-4 font-black text-[10px] mt-2">BROADCAST</button>`);
+                const { data } = await supabase.from('global_log').select('*, from:operatives!user_id(alias)').order('created_at', { ascending: false }).limit(10);
+                const list = document.getElementById('g-list');
                 for (const g of (data || [])) {
                     const el = document.createElement('div'); el.className = "log-entry";
-                    document.getElementById('g-list').appendChild(el);
+                    list.appendChild(el);
                     await Typer.type(el, `[${g.from?.alias || 'ANON'}] >> ${g.content}`);
                 }
             },
             post: async () => {
                 const content = document.getElementById('g-in').value;
-                if(content) {
-                    await supabase.from('global_log').insert([{ user_id: Auth.user.id, content }]);
-                    Global.load();
+                if(content && Auth.user) {
+                    const { error } = await supabase.from('global_log').insert([{ user_id: Auth.user.id, content: content }]);
+                    if(error) alert("SIGNAL FAILED: REGISTER IDENTITY FIRST");
+                    else { document.getElementById('g-in').value = ""; Global.load(); }
                 }
             }
         };
 
         const System = {
-            decommission: async () => {
-                if(confirm("TERMINATE CONNECTION?")) {
-                    await supabase.auth.signOut();
-                    location.reload();
-                }
-            }
+            decommission: async () => { if(confirm("TERMINATE CONNECTION?")) { await supabase.auth.signOut(); location.reload(); } }
         };
 
         Auth.init();
     </script>
 </body>
-</html>
+    </html>
+    
