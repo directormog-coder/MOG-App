@@ -4,101 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>M.O.G. | MANIFEST</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;900&display=swap" rel="stylesheet">
-
     <style>
         :root { --gold: #D4AF37; --bg: #050505; --panel: #0a0a0a; }
         body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .glass-tile { background: var(--panel); border: 1px solid rgba(212, 175, 55, 0.1); transition: 0.3s; cursor: pointer; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        .glass-tile:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); transform: translateY(-3px); box-shadow: 0 0 20px rgba(212, 175, 55, 0.1); }
-
+        .glass-tile { background: var(--panel); border: 1px solid rgba(212, 175, 55, 0.1); transition: 0.3s; cursor: pointer; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .glass-tile:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); transform: translateY(-3px); }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 200; backdrop-filter: blur(45px); align-items: center; justify-content: center; opacity: 0; transition: 0.4s; }
         .modal.active { display: flex; opacity: 1; }
-
-        .node-pulse { width: 4px; height: 4px; background: var(--gold); border-radius: 50%; position: absolute; box-shadow: 0 0 10px var(--gold); animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
-
-        #neural-canvas { width: 100%; height: 150px; background: rgba(212, 175, 55, 0.02); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 4px; position: relative; overflow: hidden; }
-        
-        input, textarea { background: rgba(255,255,255,0.02) !important; border: 1px solid rgba(212,175,55,0.2) !important; color: #fff !important; padding: 14px; width: 100%; font-size: 10px; outline: none; }
         .log-entry { border-left: 2px solid var(--gold); padding: 10px; margin-bottom: 12px; background: rgba(212,175,55,0.03); text-align: left; font-size: 10px; }
-        
-        ::-webkit-scrollbar { width: 2px; }
-        ::-webkit-scrollbar-thumb { background: var(--gold); }
+        #neural-canvas { width: 100%; height: 120px; background: rgba(212, 175, 55, 0.02); border: 1px solid rgba(212, 175, 55, 0.1); position: relative; overflow: hidden; }
+        .node-pulse { width: 4px; height: 4px; background: var(--gold); border-radius: 50%; position: absolute; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
+        input, textarea { background: rgba(255,255,255,0.02) !important; border: 1px solid rgba(212,175,55,0.2) !important; color: #fff !important; padding: 12px; width: 100%; font-size: 10px; outline: none; }
     </style>
 </head>
 <body id="terminal-body">
-
     <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
         <div class="serif text-2xl gold-text cursor-pointer" onclick="location.reload()">M.O.G.</div>
-        <div id="auth-status" class="text-[7px] tracking-[0.5em] text-zinc-500 uppercase flex items-center gap-2">
-            GRID_SYNC: <span id="online-count">0</span> ACTIVE <div class="w-1.5 h-1.5 rounded-full bg-zinc-800" id="status-dot"></div>
+        <div id="auth-status" class="text-[7px] tracking-[0.5em] text-zinc-500 flex items-center gap-2">
+            GRID: <span id="online-count">1</span> | <span id="admin-status">OPERATIVE</span> <div class="w-1.5 h-1.5 rounded-full bg-zinc-800" id="status-dot"></div>
         </div>
     </nav>
-
-    <main class="relative z-10 pt-32 px-8 max-w-lg mx-auto text-center">
-        <h1 class="serif text-5xl gold-text mb-2 italic tracking-tighter">MANIFEST</h1>
-        <p class="text-[9px] tracking-[0.6em] text-zinc-500 mb-8 uppercase font-bold">Neural Command Link</p>
-
-        <div id="neural-canvas" class="mb-8 flex items-center justify-center">
-            <div id="constellation" class="relative w-full h-full"></div>
-            <div class="absolute text-[8px] tracking-[0.5em] text-gold/30 uppercase pointer-events-none">Network Topology Active</div>
-        </div>
-
+    <main class="relative z-10 pt-28 px-8 max-w-lg mx-auto text-center">
+        <h1 class="serif text-4xl gold-text mb-2 italic tracking-tighter">MANIFEST</h1>
+        <div id="neural-canvas" class="mb-6"><div id="constellation" class="w-full h-full relative"></div></div>
         <div class="grid grid-cols-2 gap-4">
-            <div onclick="UI.open('auth')" class="glass-tile aspect-square">
-                <div class="text-[9px] tracking-widest uppercase font-black text-gold">Identity</div>
-            </div>
-            <div onclick="UI.open('vault')" class="glass-tile aspect-square">
-                <div class="text-[9px] tracking-widest uppercase font-black text-gold">Vault</div>
-            </div>
-            <div onclick="UI.open('comms')" class="glass-tile aspect-square">
-                <div class="text-[9px] tracking-widest uppercase font-black text-gold">Transmit</div>
-            </div>
-            <div onclick="UI.open('global')" class="glass-tile aspect-square">
-                <div class="text-[9px] tracking-widest uppercase font-black text-gold">Global Log</div>
-            </div>
+            <div onclick="UI.open('auth')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Identity</div></div>
+            <div onclick="UI.open('files')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Binary Store</div></div>
+            <div onclick="UI.open('comms')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Transmit</div></div>
+            <div onclick="UI.open('global')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Global Log</div></div>
         </div>
-
-        <div class="flex justify-between items-center mt-8 px-2">
-            <button onclick="System.decommission()" class="text-[7px] text-zinc-700 tracking-[0.3em] uppercase hover:text-red-500">>> Decommission</button>
-            <div class="text-[7px] text-zinc-700 uppercase tracking-widest">Protocol v4.2.0</div>
+        <div class="mt-8 flex justify-between text-[7px] text-zinc-700 tracking-widest uppercase px-2">
+            <span onclick="System.decommission()" class="cursor-pointer hover:text-red-600">>> Wipe Local</span>
+            <span>Ver. 5.2.0_Asili</span>
         </div>
     </main>
 
-    <div id="modal" class="modal">
-        <div class="p-8 w-full max-w-md text-center">
-            <h2 id="m-title" class="serif text-3xl gold-text mb-1 italic"></h2>
-            <div id="m-body" class="text-[9px] tracking-[0.4em] text-zinc-500 uppercase mb-8 pb-4 border-b border-gold/10"></div>
-            <div id="m-action-container"></div>
-            <button onclick="UI.close()" class="mt-12 text-[8px] text-zinc-600 tracking-[0.5em] uppercase hover:text-white transition-all">Terminate Link</button>
-        </div>
-    </div>
+    <div id="modal" class="modal"><div class="p-8 w-full max-w-md text-center"><h2 id="m-title" class="serif text-3xl gold-text mb-1 italic"></h2><div id="m-body" class="text-[9px] tracking-[0.4em] text-zinc-500 uppercase mb-8 border-b border-gold/10 pb-4"></div><div id="m-action-container"></div><button onclick="UI.close()" class="mt-12 text-[8px] text-zinc-600 tracking-[0.5em] uppercase hover:text-white transition-all">Terminate Link</button></div></div>
 
     <script>
-        const S_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
-        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
+        // Replace with your actual credentials
+        const S_URL = 'YOUR_SUPABASE_URL';
+        const S_KEY = 'YOUR_SUPABASE_ANON_KEY';
         const supabase = window.supabase.createClient(S_URL, S_KEY);
 
         const Sound = {
             ctx: new (window.AudioContext || window.webkitAudioContext)(),
-            play(freq, dur = 0.1, type = 'square') {
+            play(f, d = 0.1, t = 'square') {
                 if (this.ctx.state === 'suspended') this.ctx.resume();
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                gain.gain.setValueAtTime(0.02, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
-                osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + dur);
+                const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                o.type = t; o.frequency.setValueAtTime(f, this.ctx.currentTime);
+                g.gain.setValueAtTime(0.01, this.ctx.currentTime);
+                o.connect(g); g.connect(this.ctx.destination);
+                o.start(); o.stop(this.ctx.currentTime + d);
             }
         };
 
@@ -107,51 +71,48 @@
                 Sound.play(600);
                 document.getElementById('modal').classList.add('active');
                 if(node === 'auth') Auth.check();
-                if(node === 'vault') Vault.load();
-                if(node === 'comms') Comms.load();
+                if(node === 'files') Files.load();
                 if(node === 'global') Global.load();
             },
-            close: () => {
-                Sound.play(300);
-                document.getElementById('modal').classList.remove('active');
-                Typer.stop();
-            },
-            render: (title, body, action = "") => {
-                document.getElementById('m-title').innerText = title;
-                document.getElementById('m-body').innerHTML = body;
-                document.getElementById('m-action-container').innerHTML = action;
+            close: () => { document.getElementById('modal').classList.remove('active'); Typer.stop(); },
+            render: (t, b, a = "") => {
+                document.getElementById('m-title').innerText = t;
+                document.getElementById('m-body').innerHTML = b;
+                document.getElementById('m-action-container').innerHTML = a;
             }
         };
 
         const Typer = {
             active: true,
-            async type(element, text, speed = 25) {
+            async type(el, txt) {
                 this.active = true;
                 return new Promise(res => {
-                    let i = 0; element.innerHTML = "";
-                    const cursor = document.createElement('span');
-                    cursor.className = 'cursor'; element.appendChild(cursor);
-                    const interval = setInterval(() => {
-                        if (!this.active) { clearInterval(interval); res(); return; }
-                        cursor.insertAdjacentHTML('beforebegin', text[i]);
-                        Sound.play(150, 0.05); i++;
-                        if (i >= text.length) { clearInterval(interval); cursor.remove(); res(); }
-                    }, speed);
+                    let i = 0; el.innerHTML = "";
+                    const int = setInterval(() => {
+                        if (!this.active) { clearInterval(int); res(); return; }
+                        el.insertAdjacentHTML('beforeend', txt[i]); Sound.play(150, 0.05); i++;
+                        if (i >= txt.length) { clearInterval(int); res(); }
+                    }, 25);
                 });
             },
             stop() { this.active = false; }
         };
 
         const Auth = {
-            user: null,
+            user: null, isAdmin: false,
             init: async () => {
-                supabase.auth.onAuthStateChange((_, session) => {
-                    Auth.user = session?.user || null;
-                    document.getElementById('status-dot').style.background = Auth.user ? "#D4AF37" : "#333";
-                    if(Auth.user) Network.heartbeat();
-                });
                 const { data } = await supabase.auth.getSession();
                 if(!data.session) await supabase.auth.signInAnonymously();
+                
+                supabase.auth.onAuthStateChange(async (_, s) => {
+                    Auth.user = s?.user || null;
+                    if(Auth.user) {
+                        const { data: op } = await supabase.from('operatives').select('is_admin').eq('id', Auth.user.id).single();
+                        Auth.isAdmin = op?.is_admin || false;
+                        document.getElementById('admin-status').innerText = Auth.isAdmin ? "ADMIN_ACCESS" : "OPERATIVE";
+                        Network.heartbeat();
+                    }
+                });
             },
             check: async () => {
                 const { data: op } = await supabase.from('operatives').select('*').eq('id', Auth.user.id).single();
@@ -159,97 +120,70 @@
                     UI.render(op.alias, `UID: ${op.id}`, `<div id="qr" class="bg-white p-2 inline-block"></div>`);
                     new QRCode(document.getElementById("qr"), { text: op.id, width: 140, height: 140 });
                 } else {
-                    UI.render("IDENTITY", "Register Alias", `<input id="a-in" placeholder="ALIAS"><button onclick="Auth.reg()" class="w-full bg-[#D4AF37] py-4 text-black font-black text-[10px] mt-4">INITIALIZE</button>`);
+                    UI.render("IDENTITY", "Register Alias", `<input id="a-in" placeholder="ALIAS"><button onclick="Auth.reg()" class="w-full bg-[#D4AF37] py-4 text-black font-black text-[10px] mt-2">REGISTER</button>`);
                 }
             },
             reg: async () => {
                 const alias = document.getElementById('a-in').value.toUpperCase();
-                if(alias) await supabase.from('operatives').insert([{ id: Auth.user.id, alias }]);
-                Auth.check();
+                if(alias) {
+                    await supabase.from('operatives').insert([{ id: Auth.user.id, alias }]);
+                    Auth.check();
+                }
             }
         };
 
         const Network = {
             heartbeat: async () => {
                 await supabase.from('operatives').update({ last_seen: new Date().toISOString() }).eq('id', Auth.user.id);
-                Network.refreshMap();
-                setInterval(Network.refreshMap, 30000);
+                Network.refresh();
             },
-            refreshMap: async () => {
-                const tenMinsAgo = new Date(Date.now() - 10 * 60000).toISOString();
-                const { count } = await supabase.from('operatives').select('*', { count: 'exact', head: true }).gt('last_seen', tenMinsAgo);
+            refresh: async () => {
+                const ago = new Date(Date.now() - 10 * 60000).toISOString();
+                const { count } = await supabase.from('operatives').select('*', { count: 'exact', head: true }).gt('last_seen', ago);
                 document.getElementById('online-count').innerText = count || 1;
-                
-                const container = document.getElementById('constellation');
-                container.innerHTML = '';
-                for(let i=0; i < (count || 1); i++) {
-                    const dot = document.createElement('div');
-                    dot.className = 'node-pulse';
-                    dot.style.top = Math.random() * 90 + '%';
-                    dot.style.left = Math.random() * 90 + '%';
-                    container.appendChild(dot);
-                }
             }
         };
 
-        const Vault = {
+        const Files = {
             load: async () => {
-                const { data } = await supabase.from('vault').select('*').eq('user_id', Auth.user.id).order('created_at', { ascending: false });
-                const list = data?.map(i => `<div class="log-entry">${i.content}</div>`).join('') || "NO DATA";
-                UI.render("VAULT", "Manifest Storage", `<div class="mb-4">${list}</div><textarea id="v-in" placeholder="ADD SECRET..." rows="2"></textarea><button onclick="Vault.save()" class="w-full border border-gold text-gold py-3 text-[9px] mt-2">COMMIT</button>`);
+                UI.render("BINARY STORE", "Encrypted Data Packets", `<div id="file-list" class="mb-4"></div><input type="file" id="file-in" class="hidden" onchange="Files.upload()"><button onclick="document.getElementById('file-in').click()" class="w-full border border-gold text-gold py-4 text-[9px] font-bold">UPLOAD BINARY</button>`);
+                const { data } = await supabase.storage.from('manifest-store').list(Auth.user.id);
+                document.getElementById('file-list').innerHTML = data?.map(f => `<div class="log-entry flex justify-between"><span>${f.name}</span> <a href="${S_URL}/storage/v1/object/public/manifest-store/${Auth.user.id}/${f.name}" target="_blank" class="text-gold">OPEN</a></div>`).join('') || "NO FILES DETECTED";
             },
-            save: async () => {
-                const content = document.getElementById('v-in').value;
-                if(content) await supabase.from('vault').insert([{ user_id: Auth.user.id, content }]);
-                Vault.load();
-            }
-        };
-
-        const Comms = {
-            load: async () => {
-                const { data } = await supabase.from('transmissions').select('*, from:operatives!sender_id(alias)').eq('recipient_id', Auth.user.id).order('created_at', { ascending: false });
-                UI.render("TRANSMIT", "Secure Handshake", `<div id="comms-list" class="mb-4"></div><input id="c-target" placeholder="TARGET ALIAS"><textarea id="c-msg" placeholder="MESSAGE..." rows="2" class="mt-2"></textarea><button onclick="Comms.send()" class="w-full bg-white text-black py-4 font-black text-[10px] mt-4">DISPATCH</button>`);
-                for (const m of (data || [])) {
-                    const el = document.createElement('div');
-                    el.className = "log-entry border-[#00f3ff] bg-cyan-500/5";
-                    document.getElementById('comms-list').appendChild(el);
-                    await Typer.type(el, `INCOMING [${m.from?.alias || 'ANON'}] >> ${m.message}`);
+            upload: async () => {
+                const file = document.getElementById('file-in').files[0];
+                if(file) {
+                    await supabase.storage.from('manifest-store').upload(`${Auth.user.id}/${file.name}`, file);
+                    Files.load();
                 }
-            },
-            send: async () => {
-                const target = document.getElementById('c-target').value.toUpperCase();
-                const msg = document.getElementById('c-msg').value;
-                const { data: op } = await supabase.from('operatives').select('id').eq('alias', target).single();
-                if(!op) return Sound.play(100, 0.5);
-                await supabase.from('transmissions').insert([{ sender_id: Auth.user.id, recipient_id: op.id, message: msg }]);
-                Comms.load();
             }
         };
 
         const Global = {
             load: async () => {
-                UI.render("GLOBAL LOG", "Network Feed", `<div id="global-list" class="mb-4"></div><textarea id="g-in" placeholder="BROADCAST..." rows="2"></textarea><button onclick="Global.post()" class="w-full bg-[#D4AF37] text-black py-4 font-black text-[10px] mt-2">EMIT SIGNAL</button>`);
+                UI.render("GLOBAL LOG", "Broadcast Feed", `<div id="g-list" class="mb-4"></div><textarea id="g-in" placeholder="BROADCAST..."></textarea><button onclick="Global.post()" class="w-full bg-[#D4AF37] text-black py-4 font-black text-[10px] mt-2">EMIT SIGNAL</button>`);
                 const { data } = await supabase.from('global_log').select('*, from:operatives!user_id(alias)').order('created_at', { ascending: false }).limit(5);
                 for (const g of (data || [])) {
-                    const el = document.createElement('div');
-                    el.className = "log-entry";
-                    document.getElementById('global-list').appendChild(el);
-                    await Typer.type(el, `BROADCAST [${g.from?.alias || 'ANON'}] >> ${g.content}`);
+                    const el = document.createElement('div'); el.className = "log-entry";
+                    document.getElementById('g-list').appendChild(el);
+                    await Typer.type(el, `[${g.from?.alias || 'ANON'}] >> ${g.content}`);
                 }
             },
             post: async () => {
                 const content = document.getElementById('g-in').value;
-                if(content) await supabase.from('global_log').insert([{ user_id: Auth.user.id, content }]);
-                Global.load();
+                if(content) {
+                    await supabase.from('global_log').insert([{ user_id: Auth.user.id, content }]);
+                    Global.load();
+                }
             }
         };
 
         const System = {
             decommission: async () => {
-                if(!confirm("TERMINATE IDENTITY?")) return;
-                document.getElementById('terminal-body').style.filter = "invert(1) contrast(5)";
-                Sound.play(100, 1.5, 'sawtooth');
-                setTimeout(async () => { await supabase.auth.signOut(); location.reload(); }, 1000);
+                if(confirm("TERMINATE CONNECTION?")) {
+                    await supabase.auth.signOut();
+                    location.reload();
+                }
             }
         };
 
