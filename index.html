@@ -12,71 +12,79 @@
         body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
         .serif { font-family: 'Cinzel', serif; }
         
-        /* THE LOGO FIX */
-        .mog-emblem { 
-            width: 160px; height: 160px; margin: 0 auto; 
-            border-radius: 50%;
-            border: 2px solid var(--gold);
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
-            object-fit: cover;
+        /* ORIGINAL LOGO RESTORATION */
+        .mog-logo { 
+            width: 140px; height: auto; margin: 0 auto 20px auto; display: block; 
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4));
         }
 
-        /* TILE FIX: Ensuring they are the highest clickable layer */
-        .interactive-grid { position: relative; z-index: 500; }
+        /* TILE REACTIVITY */
+        #main-grid { position: relative; z-index: 500 !important; }
         .glass-tile { 
-            background: rgba(10, 10, 10, 0.9); 
+            background: rgba(10, 10, 10, 0.95); 
             border: 1px solid rgba(0, 210, 255, 0.2); 
             box-shadow: inset 0 0 15px rgba(0, 210, 255, 0.05);
-            transition: 0.1s; 
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); 
             cursor: pointer; 
             display: flex; align-items: center; justify-content: center;
-            pointer-events: auto; /* Force response */
+            pointer-events: auto !important;
+            -webkit-tap-highlight-color: transparent;
         }
-        .glass-tile:active { transform: scale(0.94); border-color: var(--blue); box-shadow: 0 0 25px rgba(0, 210, 255, 0.4); }
+        .glass-tile:active { 
+            transform: scale(0.94); 
+            border-color: var(--blue); 
+            box-shadow: 0 0 25px rgba(0, 210, 255, 0.4); 
+        }
 
+        /* MODAL OVERLAY */
         .modal { 
             display: none; position: fixed; inset: 0; 
             background: rgba(0,0,0,0.98); z-index: 1000; 
-            backdrop-filter: blur(30px); align-items: center; 
+            backdrop-filter: blur(35px); align-items: center; 
             justify-content: center; opacity: 0; transition: 0.2s; 
         }
         .modal.active { display: flex; opacity: 1; }
         
         .action-btn { 
             width: 100%; border: 1px solid var(--blue); padding: 18px; 
-            font-size: 10px; font-weight: 900; letter-spacing: 0.2em; 
+            font-size: 10px; font-weight: 900; letter-spacing: 0.3em; 
             color: var(--blue); margin-bottom: 12px; background: transparent;
+            text-transform: uppercase;
         }
         .action-btn:active { background: var(--blue); color: #000; }
-        input { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(0, 210, 255, 0.3) !important; color: #fff !important; padding: 14px; width: 100%; margin-bottom: 10px; outline: none; }
+        
+        input { 
+            background: rgba(255,255,255,0.05) !important; 
+            border: 1px solid rgba(0, 210, 255, 0.3) !important; 
+            color: #fff !important; padding: 14px; width: 100%; 
+            margin-bottom: 12px; outline: none; border-radius: 0;
+        }
     </style>
 </head>
 <body>
 
-    <nav class="fixed top-0 w-full p-6 flex justify-between items-center z-[600]">
+    <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
         <div class="text-[8px] tracking-[0.5em] text-blue-400">MINISTRY OF GROOVE</div>
-        <div class="text-[8px] tracking-[0.5em] text-zinc-500 uppercase">Ver. 8.0_Cabinet</div>
+        <div class="text-[8px] tracking-[0.5em] text-zinc-600">STATUS: READY</div>
     </nav>
 
-    <main class="relative pt-12 text-center z-10 h-full flex flex-col justify-center">
-        <div class="mb-6">
-            <img src="https://i.ibb.co/Lz0D79m/1000201660.jpg" alt="M.O.G." class="mog-emblem">
-        </div>
-
-        <h1 class="serif text-4xl text-[#D4AF37] mb-12 italic tracking-tighter shadow-black">MANIFEST</h1>
+    <main class="relative pt-24 text-center z-10 flex flex-col justify-center h-full">
+        <img src="https://raw.githubusercontent.com/ministryofgroove/manifest/main/logo.png" alt="M.O.G." class="mog-logo">
         
-        <div class="interactive-grid max-w-sm mx-auto px-6 w-full">
+        <h1 class="serif text-4xl text-[#D4AF37] mb-12 italic tracking-tighter">MANIFEST</h1>
+        
+        <div class="grid-container max-w-sm mx-auto px-6 w-full" id="main-grid">
             <div class="grid grid-cols-2 gap-4">
-                <div onclick="UI.open('auth')" class="glass-tile py-10">
+                <div onclick="UI.open('auth')" class="glass-tile py-12">
                     <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Identity</span>
                 </div>
-                <div onclick="UI.open('files')" class="glass-tile py-10">
+                <div onclick="UI.open('files')" class="glass-tile py-12">
                     <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Binary Store</span>
                 </div>
-                <div onclick="UI.open('comms')" class="glass-tile py-10">
+                <div onclick="UI.open('comms')" class="glass-tile py-12">
                     <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Transmit</span>
                 </div>
-                <div onclick="UI.open('global')" class="glass-tile py-10">
+                <div onclick="UI.open('global')" class="glass-tile py-12">
                     <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Global Log</span>
                 </div>
             </div>
@@ -86,34 +94,32 @@
     <div id="modal" class="modal">
         <div class="p-10 w-full max-w-sm text-center">
             <h2 id="m-title" class="serif text-3xl text-[#D4AF37] mb-2 italic"></h2>
-            <div id="m-body" class="text-[9px] tracking-[0.4em] text-blue-400 uppercase mb-8 border-b border-blue-900/30 pb-4"></div>
+            <div id="m-body" class="text-[9px] tracking-[0.4em] text-blue-400 uppercase mb-10 border-b border-blue-900/30 pb-4"></div>
             <div id="m-action-container"></div>
-            <button onclick="UI.close()" class="mt-8 text-[9px] text-zinc-600 tracking-[0.5em] uppercase">Close Terminal</button>
+            <button onclick="UI.close()" class="mt-8 text-[9px] text-zinc-600 tracking-[0.5em] uppercase hover:text-white transition-all underline">Terminate Link</button>
         </div>
     </div>
 
     <script>
-        // Use a simple alert test to prove clickability
+        const S_URL = 'YOUR_SUPABASE_URL';
+        const S_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = window.supabase.createClient(S_URL, S_KEY);
+
         const UI = {
             open: (node) => {
-                console.log("Triggering: " + node);
                 const modal = document.getElementById('modal');
                 modal.style.display = 'flex';
                 setTimeout(() => modal.classList.add('active'), 10);
                 
-                if(node === 'auth') {
-                    UI.render("IDENTITY", "Access Logic", `
-                        <button onclick="Auth.showReg()" class="action-btn">Registration</button>
-                        <button onclick="Auth.showLogin()" class="action-btn">Login Protocol</button>
-                    `);
-                } else {
-                    UI.render(node.toUpperCase(), "System Status", "<p class='text-zinc-600'>SCANNING GRID...</p>");
-                }
+                if(node === 'auth') Auth.showGateway();
+                if(node === 'files') UI.render("STORE", "Vault Access", "<p class='text-zinc-500'>LOCKED</p>");
+                if(node === 'comms') UI.render("TRANSMIT", "P2P LINK", "<p class='text-zinc-500'>SCANNING...</p>");
+                if(node === 'global') UI.render("LOG", "Network Grid", "<p class='text-zinc-500'>MONITORING...</p>");
             },
             close: () => {
                 const modal = document.getElementById('modal');
                 modal.classList.remove('active');
-                setTimeout(() => modal.style.display = 'none', 200);
+                setTimeout(() => modal.style.display = 'none', 300);
             },
             render: (t, b, a = "") => {
                 document.getElementById('m-title').innerText = t;
@@ -123,8 +129,44 @@
         };
 
         const Auth = {
-            showReg: () => UI.render("REGISTER", "New Operative", `<input placeholder="ALIAS"><input placeholder="EMAIL"><button class="action-btn">Initialize</button>`),
-            showLogin: () => UI.render("LOGIN", "Reconnect", `<input placeholder="EMAIL"><input placeholder="PASSWORD"><button class="action-btn">Connect</button>`)
+            showGateway: () => {
+                UI.render("IDENTITY", "Access Protocol", `
+                    <button onclick="Auth.showLogin()" class="action-btn">Reconnect (Login)</button>
+                    <button onclick="Auth.showRegister()" class="action-btn">Join Grid (Register)</button>
+                `);
+            },
+            showLogin: () => {
+                UI.render("LOGIN", "Credentials Required", `
+                    <input type="email" id="email" placeholder="EMAIL ADDRESS">
+                    <input type="password" id="pass" placeholder="PASSWORD">
+                    <button onclick="Auth.handleLogin()" class="action-btn !bg-blue-500 !text-black border-none">Authenticate</button>
+                `);
+            },
+            showRegister: () => {
+                UI.render("REGISTER", "New Operative", `
+                    <input type="text" id="alias" placeholder="OPERATIVE ALIAS">
+                    <input type="email" id="email" placeholder="EMAIL ADDRESS">
+                    <input type="password" id="pass" placeholder="PASSWORD">
+                    <button onclick="Auth.handleReg()" class="action-btn !bg-blue-500 !text-black border-none">Initialize</button>
+                `);
+            },
+            handleLogin: async () => {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('pass').value;
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if(error) alert(error.message); else UI.close();
+            },
+            handleReg: async () => {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('pass').value;
+                const alias = document.getElementById('alias').value;
+                const { data, error } = await supabase.auth.signUp({ email, password });
+                if(data.user) {
+                    await supabase.from('operatives').insert([{ id: data.user.id, alias: alias.toUpperCase() }]);
+                    UI.close();
+                }
+                if(error) alert(error.message);
+            }
         };
     </script>
 </body>
