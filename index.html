@@ -12,45 +12,35 @@
 
     <style>
         :root { --gold: #D4AF37; --bg: #050505; }
-        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; height: 100vh; margin: 0; overflow: hidden; }
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        /* THE TRIGGER SYSTEM */
-        .dashboard-grid { display: grid; grid-template-cols: repeat(2, 1fr); gap: 15px; padding: 10px; }
+        /* TILE SYSTEM */
+        .dashboard-grid { display: grid; grid-template-cols: repeat(2, 1fr); gap: 15px; padding: 10px; position: relative; z-index: 10; }
         
         .glass-tile { 
             background: #0a0a0a; 
-            border: 1px solid rgba(212, 175, 55, 0.3); 
+            border: 1px solid rgba(212, 175, 55, 0.4); 
             aspect-ratio: 1/1;
             border-radius: 4px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             cursor: pointer;
-            position: relative;
-            transition: 0.1s;
-            /* Critical Fix: Prevent child elements from blocking the click */
-            pointer-events: auto; 
-            z-index: 50;
+            transition: 0.2s;
         }
-
-        /* Tactile Feedback: Glow on Press */
-        .glass-tile:active { 
-            transform: scale(0.94); 
-            background: var(--gold); 
-            box-shadow: 0 0 30px var(--gold);
-        }
+        .glass-tile:active { transform: scale(0.95); background: var(--gold); }
         .glass-tile:active span { color: #000 !important; }
 
-        /* MODAL LAYER - Forced to Top */
+        /* MODAL SYSTEM - SIMPLIFIED */
         #node-modal { 
             display: none; 
             position: fixed; 
             inset: 0; 
-            background: rgba(0,0,0,0.95); 
-            z-index: 99999; /* Higher than everything */
-            backdrop-filter: blur(15px); 
+            background: rgba(0,0,0,0.98); 
+            z-index: 9999; 
+            flex-direction: column;
             align-items: center;
             justify-content: center;
         }
@@ -58,56 +48,59 @@
         .modal-content { 
             background: #0c0c0c; 
             border: 1px solid var(--gold); 
-            width: 90%; 
-            max-width: 400px; 
-            padding: 2rem; 
+            width: 85%; 
+            max-width: 380px; 
+            padding: 30px; 
             position: relative;
-            box-shadow: 0 0 50px rgba(212, 175, 55, 0.1);
+            text-align: center;
         }
 
-        input { background: #000 !important; border: 1px solid var(--gold) !important; color: #fff !important; text-align: center; border-radius: 0px !important; width: 100%; padding: 1rem; margin-bottom: 1rem; text-transform: uppercase; font-size: 14px; }
+        input { background: #000; border: 1px solid var(--gold); color: #fff; width: 100%; padding: 12px; margin-bottom: 15px; text-transform: uppercase; text-align: center; }
         
-        #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 100000; display: flex; justify-content: center; align-items: center; animation: fadeOut 1s ease 2s forwards; pointer-events: none; }
+        #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; justify-content: center; align-items: center; pointer-events: none; animation: fadeOut 1s forwards 2s; }
         @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-        #video-bg { position: fixed; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; opacity: 0.2; pointer-events: none; }
+        
+        #video-bg { position: fixed; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; }
+        #qrcode img { margin: 0 auto; border: 4px solid white; }
     </style>
 </head>
 <body>
 
-    <div id="ritual-overlay"><div class="text-[10px] tracking-[0.5em] text-gold animate-pulse uppercase">> CONNECTING...</div></div>
+    <div id="ritual-overlay"><div class="text-[10px] tracking-[0.5em] text-gold animate-pulse uppercase">ESTABLISHING CONNECTION...</div></div>
+    
     <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
 
-    <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
+    <nav class="p-8 flex justify-between items-center relative z-20">
         <div class="serif text-2xl gold-text tracking-tighter" onclick="location.reload()">M.O.G.</div>
-        <div class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
+        <div class="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_10px_cyan]"></div>
     </nav>
 
-    <main class="relative z-10 pt-28 px-8 max-w-lg mx-auto text-center h-screen">
-        <img src="logo.png" class="w-24 h-24 mx-auto mb-8 border border-gold/20 rounded-full shadow-2xl">
+    <main class="pt-10 px-8 max-w-lg mx-auto text-center relative z-20">
+        <img src="logo.png" class="w-24 h-24 mx-auto mb-6 border border-gold/20 rounded-full shadow-2xl">
         <h1 class="serif text-5xl gold-text mb-2 italic">MANIFEST</h1>
         <p class="text-[9px] tracking-[0.5em] text-zinc-500 mb-12 uppercase">Security Interface</p>
 
         <div class="dashboard-grid">
-            <div class="glass-tile" onmousedown="forceOpen('identity')" ontouchstart="forceOpen('identity')">
-                <span class="text-[10px] tracking-widest uppercase font-bold text-gold pointer-events-none">Identity</span>
+            <div class="glass-tile" onclick="openIdentity()">
+                <span class="text-[10px] tracking-widest uppercase font-bold text-gold">Identity</span>
             </div>
-            <div class="glass-tile" onmousedown="forceOpen('vault')" ontouchstart="forceOpen('vault')">
-                <span class="text-[10px] tracking-widest uppercase font-bold text-gold pointer-events-none">Vault</span>
+            <div class="glass-tile" onclick="alert('ACCESS DENIED')">
+                <span class="text-[10px] tracking-widest uppercase font-bold text-gold">Vault</span>
             </div>
-            <div class="glass-tile" onmousedown="forceOpen('crew')" ontouchstart="forceOpen('crew')">
-                <span class="text-[10px] tracking-widest uppercase font-bold text-gold pointer-events-none">Crew</span>
+            <div class="glass-tile" onclick="alert('SIGNAL LOST')">
+                <span class="text-[10px] tracking-widest uppercase font-bold text-gold">Crew</span>
             </div>
-            <div class="glass-tile" onmousedown="forceOpen('command')" ontouchstart="forceOpen('command')">
-                <span class="text-[10px] tracking-widest uppercase font-bold text-gold pointer-events-none">Command</span>
+            <div class="glass-tile" onclick="alert('RESTRICTED')">
+                <span class="text-[10px] tracking-widest uppercase font-bold text-gold">Command</span>
             </div>
         </div>
     </main>
 
-    <div id="node-modal" style="display: none;">
+    <div id="node-modal">
         <div class="modal-content">
-            <span class="absolute top-4 right-6 text-gold text-2xl cursor-pointer" onclick="closeNode()">&times;</span>
-            <h2 id="modal-title" class="serif text-3xl gold-text mb-2 italic text-center"></h2>
-            <div id="modal-body" class="text-zinc-400 text-[10px] uppercase tracking-[0.2em] text-center mb-8"></div>
+            <span class="absolute top-2 right-4 text-gold text-2xl cursor-pointer" onclick="closeNode()">&times;</span>
+            <h2 id="modal-title" class="serif text-2xl gold-text mb-4">Identity</h2>
+            <div id="modal-body" class="text-zinc-400 text-[10px] uppercase tracking-widest mb-6">Checking Credentials...</div>
             <div id="modal-action"></div>
         </div>
     </div>
@@ -118,50 +111,41 @@
         const supabase = window.supabase.createClient(S_URL, S_KEY);
         let currentUser = null;
 
-        // AUTH
-        async function init() {
-            const { data } = await supabase.auth.signInAnonymously();
-            currentUser = data.user;
+        async function initAuth() {
+            try {
+                const { data } = await supabase.auth.signInAnonymously();
+                currentUser = data.user;
+                console.log("Auth Active");
+            } catch (e) { console.error("Auth Failed"); }
         }
-        init();
+        initAuth();
 
-        // FAIL-SAFE TRIGGER: Bypass all CSS/JS delay
-        function forceOpen(type) {
-            console.log("Force Opening: " + type);
+        function openIdentity() {
             const modal = document.getElementById('node-modal');
-            modal.style.display = 'flex'; // Use flex for centering
-            
-            if (type === 'identity') {
-                document.getElementById('modal-title').innerText = "Identity";
-                document.getElementById('modal-body').innerText = "Establishing Link...";
-                checkMember();
-            } else {
-                document.getElementById('modal-title').innerText = type.toUpperCase();
-                document.getElementById('modal-body').innerText = "Access Restricted.";
-                document.getElementById('modal-action').innerHTML = "";
-            }
+            modal.style.display = 'flex';
+            checkOperative();
         }
 
         function closeNode() {
             document.getElementById('node-modal').style.display = 'none';
         }
 
-        async function checkMember() {
+        async function checkOperative() {
             if (!currentUser) return;
             const { data: op } = await supabase.from('operatives').select('*').eq('id', currentUser.id).single();
-
+            
             if (op) {
-                renderID(op.alias, op.id);
+                renderPass(op.alias, op.id);
             } else {
-                document.getElementById('modal-body').innerText = "Register or Login with Alias";
+                document.getElementById('modal-body').innerText = "Register Alias";
                 document.getElementById('modal-action').innerHTML = `
                     <input type="text" id="alias-input" placeholder="ENTER ALIAS">
-                    <button onclick="handleAuth()" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px]">Verify & Link</button>
+                    <button onclick="submitIdentity()" class="w-full py-4 bg-gold text-black font-bold uppercase text-[10px]">Verify Signal</button>
                 `;
             }
         }
 
-        async function handleAuth() {
+        async function submitIdentity() {
             const alias = document.getElementById('alias-input').value.trim().toUpperCase();
             if (!alias) return;
 
@@ -169,31 +153,33 @@
 
             if (existing) {
                 await supabase.from('operatives').update({ id: currentUser.id }).eq('alias', alias);
-                renderID(existing.alias, existing.id);
+                renderPass(existing.alias, existing.id);
             } else {
                 const { error } = await supabase.from('operatives').insert([{ id: currentUser.id, alias: alias }]);
-                if (error) alert("RESERVED ALIAS");
-                else renderID(alias, currentUser.id);
+                if (error) alert("RESERVED");
+                else renderPass(alias, currentUser.id);
             }
         }
 
-        function renderID(name, id) {
+        function renderPass(name, id) {
             document.getElementById('modal-body').innerHTML = `
-                <div class="flex flex-col items-center">
-                    <div id="qrcode" class="p-2 bg-white mb-6"></div>
-                    <div class="gold-text text-3xl font-bold serif">${name}</div>
-                    <div class="text-[8px] mt-2 opacity-50">ID: ${id}</div>
-                </div>`;
-            document.getElementById('modal-action').innerHTML = `
-                <button onclick="downloadPass('${name}')" class="w-full py-4 bg-white text-black font-bold uppercase text-[10px] tracking-widest">Download Pass ↓</button>
+                <div id="qrcode" class="mb-4"></div>
+                <div class="gold-text text-2xl font-bold">${name}</div>
+                <div class="text-[8px] opacity-50 mt-1">ID: ${id}</div>
             `;
+            document.getElementById('modal-action').innerHTML = `
+                <button onclick="downloadID('${name}')" class="w-full py-3 bg-white text-black font-bold text-[10px] uppercase mt-4">Save Pass</button>
+            `;
+            // Ensure the div is clear before rendering QR
+            document.getElementById('qrcode').innerHTML = "";
             new QRCode(document.getElementById("qrcode"), { text: id, width: 140, height: 140 });
         }
 
-        function downloadPass(name) {
+        function downloadID(name) {
             const img = document.querySelector('#qrcode img');
+            if (!img) return;
             const link = document.createElement('a');
-            link.download = `MOG_ID_${name}.png`;
+            link.download = `MOG_${name}.png`;
             link.href = img.src;
             link.click();
         }
