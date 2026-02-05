@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <title>M.O.G. | Sovereign Command</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="/_vercel/insights/script.js"></script>
+
+    <style>
+        :root { --gold: #D4AF37; --cyan: #00f2ff; --bg: #050505; }
+        body { background-color: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow-x: hidden; user-select: none; }
+        .gold-gradient { background: linear-gradient(to right, var(--gold), #F3E5AB, var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(30px); border: 1px solid rgba(212, 175, 55, 0.1); }
+        section { display: none; width: 100%; position: relative; z-index: 10; } 
+        .active-view { display: block !important; animation: fadeIn 0.8s forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 99999; display: flex; flex-direction: column; justify-content: center; padding: 2rem; font-family: monospace; transition: 1s; }
+        .terminal-text { color: var(--gold); font-size: 11px; margin-bottom: 6px; opacity: 0; animation: fadeInText 0.1s forwards; }
+        .command-tile { cursor: pointer; transition: 0.4s; border: 1px solid rgba(255, 255, 255, 0.05); aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.01); border-radius: 1rem; position: relative; overflow: hidden; }
+        .command-tile::after { content: ""; position: absolute; top: -100%; left: 0; width: 100%; height: 20%; background: linear-gradient(to bottom, transparent, rgba(0, 242, 255, 0.1), transparent); animation: scan 4s linear infinite; }
+        #video-bg { position: fixed; inset: 0; z-index: -10; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; filter: grayscale(100%); }
+    </style>
+</head>
+<body class="pb-40" oncontextmenu="return false;">
+
+    <div id="ritual-overlay"><div id="terminal-log" class="max-w-xl mx-auto w-full"></div></div>
+    <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
+    <audio id="mandateAudio" loop><source src="mandate_mix.mp3" type="audio/mpeg"></audio>
+
+    <nav class="fixed top-0 w-full glass z-[100] px-8 py-6 flex justify-between items-center border-b border-white/5">
+        <div class="serif gold-gradient text-2xl font-bold italic cursor-pointer" onclick="showView('landing')">M.O.G.</div>
+        <div class="flex items-center gap-3">
+            <div class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></div>
+            <span id="presence-count" class="text-[8px] text-cyan-400 uppercase tracking-widest">Signal: Scanning</span>
+        </div>
+    </nav>
+
+    <main class="pt-44 px-6 sm:px-20 relative z-10">
+        <section id="view-landing" class="active-view text-center">
+            <img src="logo.png" class="w-40 h-40 mx-auto rounded-full mb-8 border border-gold/20">
+            <h1 class="serif text-6xl gold-gradient mb-4 italic uppercase">Manifest</h1>
+            <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div onclick="showView('self-reg')" class="command-tile glass"><h3>Identity</h3></div>
+                <div onclick="showView('gallery')" class="command-tile glass"><h3>Vault</h3></div>
+                <div onclick="showView('crew')" class="command-tile glass"><h3>Crew</h3></div>
+                <div onclick="secureEntry('command')" class="command-tile glass border-red-900/20"><h3>Command</h3></div>
+            </div>
+        </section>
+
+        <section id="view-self-reg" class="max-w-xl mx-auto text-center">
+            <button onclick="showView('landing')" class="text-gold text-[9px] mb-8 uppercase tracking-widest">← Return</button>
+            <div id="reg-box" class="glass p-10 border-white/10">
+                <h2 class="serif text-4xl gold-gradient mb-8 italic">Establish Link</h2>
+                <input type="text" id="reg-name" placeholder="OPERATIVE ALIAS" class="w-full bg-black/50 border border-white/10 p-5 mb-4 text-white text-center outline-none focus:border-cyan-400">
+                <div class="flex items-start gap-3 text-left mb-8 px-2">
+                    <input type="checkbox" id="privacy-agree" class="mt-1 accent-cyan-500">
+                    <label class="text-[10px] text-zinc-400 uppercase leading-tight">I agree to the Sovereign Privacy Protocol.</label>
+                </div>
+                <button onclick="saveIdentity()" class="w-full bg-white text-black py-5 font-black uppercase text-[10px] tracking-widest transition-all">Establish Frequency</button>
+            </div>
+            <div id="passport-box" class="hidden glass p-10 border-cyan-500/20 text-center">
+                <h2 class="serif gold-gradient text-3xl mb-6 italic">Sovereign Passport</h2>
+                <div id="qrcode" class="inline-block p-4 bg-black border border-gold"></div>
+                <p class="text-[9px] text-cyan-400 uppercase mt-4 tracking-widest" id="pass-alias">Verified</p>
+            </div>
+        </section>
+
+        <section id="view-crew" class="max-w-4xl mx-auto">
+            <button onclick="showView('landing')" class="text-gold text-[9px] mb-8 uppercase tracking-widest">← Back</button>
+            <div id="director-tools" class="hidden space-y-6 mb-12">
+                <div class="glass p-8 border-gold/30">
+                    <h2 class="serif text-xl gold-gradient uppercase mb-4 italic text-center">Audit Intelligence</h2>
+                    <div id="audit-list" class="space-y-2 max-h-48 overflow-y-auto font-monospace text-[9px]"></div>
+                </div>
+                <div id="reset-btn-zone"></div>
+            </div>
+            <div id="crew-list" class="grid grid-cols-1 gap-4"></div>
+        </section>
+
+        <section id="view-gallery" class="max-w-6xl mx-auto">
+            <button onclick="showView('landing')" class="text-gold text-[9px] mb-8 uppercase tracking-widest">← Return</button>
+            <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+        </section>
+    </main>
+
+    <script>
+        // INTEGRATED COORDINATES
+        const SUPABASE_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
+        
+        const MASTER_PASS = '7486';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let currentUser;
+
+        async function init() {
+            const log = document.getElementById('terminal-log');
+            const lines = ["> AUDITING CORE...", "> SHIELDING BIOMETRICS...", "> READY."];
+            for(let l of lines) {
+                let d = document.createElement('div'); d.className='terminal-text'; d.innerText=l;
+                log.appendChild(d); await new Promise(r=>setTimeout(r,300));
+            }
+            const { data } = await supabase.auth.signInAnonymously();
+            currentUser = data.user;
+            trackPresence();
+            checkRegistration();
+            setTimeout(() => document.getElementById('ritual-overlay').style.display='none', 800);
+        }
+
+        async function saveIdentity() {
+            if(!document.getElementById('privacy-agree').checked) return alert("CONSENT REQUIRED");
+            const alias = document.getElementById('reg-name').value.trim();
+            if(alias.length < 3) return alert("INVALID ALIAS");
+            const { error } = await supabase.from('operatives').upsert([{ id: currentUser.id, alias }]);
+            if(!error) checkRegistration();
+        }
+
+        async function checkRegistration() {
+            const { data } = await supabase.from('operatives').select('alias').eq('id', currentUser.id).single();
+            if(data) {
+                document.getElementById('reg-box').classList.add('hidden');
+                document.getElementById('passport-box').classList.remove('hidden');
+                document.getElementById('pass-alias').innerText = "ALIAS: " + data.alias.toUpperCase();
+                generateQR();
+            }
+        }
+
+        function generateQR() {
+            const qrBox = document.getElementById('qrcode');
+            qrBox.innerHTML = "";
+            new QRCode(qrBox, { text: `MOG-AUTH-${currentUser.id.slice(0,8)}`, width: 140, height: 140, colorDark : "#D4AF37", colorLight : "#000000" });
+        }
+
+        async function loadCrew() {
+            const { data } = await supabase.from('operatives').select('*');
+            document.getElementById('crew-list').innerHTML = data.map(o => `
+                <div class="glass p-5 flex justify-between items-center">
+                    <span class="serif text-lg gold-gradient tracking-widest">${o.alias}</span>
+                    <span class="text-[7px] text-zinc-500 uppercase">Authenticated</span>
+                </div>
+            `).join('');
+        }
+
+        async function loadGallery() {
+            const { data } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
+            document.getElementById('gallery-grid').innerHTML = data.map(i => `<div class="aspect-square glass overflow-hidden"><img src="${i.image_url}" class="w-full h-full object-cover grayscale"></div>`).join('');
+        }
+
+        function secureEntry(view) {
+            const pass = prompt("Clearance Code:");
+            if(pass === MASTER_PASS) { 
+                document.getElementById('director-tools').classList.remove('hidden');
+                document.getElementById('reset-btn-zone').innerHTML = `<button onclick="factoryReset()" class="w-full bg-red-900/20 border border-red-600 text-red-500 py-3 text-[10px] uppercase font-black">Emergency Reset</button>`;
+                showView('crew');
+            } else { alert("ACCESS DENIED"); }
+        }
+
+        async function factoryReset() {
+            if(confirm("PURGE ALL DATA?")) {
+                await supabase.from('operatives').delete().neq('id', '000');
+                await supabase.from('gallery').delete().neq('id', '000');
+                location.reload();
+            }
+        }
+
+        function showView(id) {
+            document.querySelectorAll('section').forEach(s => { s.classList.remove('active-view'); s.style.display='none'; });
+            document.getElementById('view-' + id).style.display='block';
+            setTimeout(() => document.getElementById('view-' + id).classList.add('active-view'), 50);
+            if(id === 'crew') loadCrew();
+            if(id === 'gallery') loadGallery();
+        }
+
+        function trackPresence() {
+            const chan = supabase.channel('online').on('presence', {event:'sync'}, () => {
+                document.getElementById('presence-count').innerText = `Sync: ${Object.keys(chan.presenceState()).length} Online`;
+            }).subscribe(async (s) => { if(s==='SUBSCRIBED') await chan.track({online_at:new Date()}) });
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
