@@ -16,11 +16,9 @@
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        /* Dashboard Tiles */
         .glass-tile { background: var(--panel); border: 1px solid rgba(255,255,255,0.05); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; aspect-ratio: 1/1; }
         .glass-tile:hover { border-color: var(--gold); transform: translateY(-5px); background: rgba(212, 175, 55, 0.05); }
         
-        /* Modals */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; backdrop-filter: blur(15px); }
         .modal-content { background: #0c0c0c; border: 1px solid var(--gold); max-width: 450px; width: 92%; margin: 12vh auto; padding: 2.5rem; border-radius: 4px; position: relative; text-align: center; }
         .close-btn { position: absolute; top: 1.5rem; right: 1.5rem; color: var(--gold); font-size: 20px; cursor: pointer; }
@@ -28,20 +26,21 @@
         #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: fadeOut 1.2s ease 2.5s forwards; pointer-events: none; }
         @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
         #video-bg { position: fixed; inset: 0; z-index: -10; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; filter: grayscale(100%); }
-        input { background: #000 !important; border: 1px solid rgba(212, 175, 55, 0.3) !important; color: #fff !important; text-align: center; padding: 12px; margin-bottom: 20px; width: 100%; outline: none; text-transform: uppercase; }
+        
+        input { background: #000 !important; border: 1px solid rgba(212, 175, 55, 0.3) !important; color: #fff !important; text-align: center; padding: 14px; margin-bottom: 20px; width: 100%; outline: none; text-transform: uppercase; letter-spacing: 2px; }
         #qrcode img { margin: 0 auto; border: 4px solid white; }
     </style>
 </head>
 <body>
 
     <div id="ritual-overlay">
-        <div class="text-[10px] tracking-[0.4em] text-gold uppercase opacity-60 font-mono">> INITIATING SOVEREIGN PROTOCOL...</div>
+        <div class="text-[10px] tracking-[0.4em] text-gold uppercase opacity-60 font-mono">> INITIALIZING UPLINK...</div>
     </div>
 
     <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
 
     <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
-        <div class="serif text-2xl gold-text tracking-tighter" onclick="location.reload()">M.O.G.</div>
+        <div class="serif text-2xl gold-text tracking-tighter cursor-pointer" onclick="location.reload()">M.O.G.</div>
         <div class="flex items-center gap-2">
             <div class="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_10px_#00f2ff]"></div>
             <span class="text-[8px] uppercase tracking-widest text-cyan-400">Signal: Secure</span>
@@ -51,11 +50,11 @@
     <main class="relative z-10 pt-28 px-8 max-w-lg mx-auto text-center h-screen overflow-y-auto pb-40">
         <img src="logo.png" class="w-28 h-28 mx-auto mb-6 border border-gold/10 rounded-full shadow-2xl">
         <h1 class="serif text-5xl gold-text mb-1 italic">MANIFEST</h1>
-        <p class="text-[9px] tracking-[0.4em] text-zinc-500 mb-12 uppercase">Sovereign Command Interface</p>
+        <p class="text-[9px] tracking-[0.4em] text-zinc-500 mb-12 uppercase">Sovereign Portal</p>
 
         <div class="grid grid-cols-2 gap-5">
-            <div onclick="openNode('identity')" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Identity</div>
+            <div onclick="openNode('uplink')" class="glass-tile">
+                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Uplink</div>
             </div>
             <div onclick="openNode('vault')" class="glass-tile">
                 <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Vault</div>
@@ -73,22 +72,22 @@
         <div class="modal-content">
             <span class="close-btn" onclick="closeNode()">&times;</span>
             <h2 id="node-title" class="serif text-3xl gold-text mb-2 italic"></h2>
-            <div id="node-body" class="mb-6 text-zinc-400 text-[12px] leading-relaxed uppercase tracking-widest"></div>
+            <div id="node-body" class="mb-6 text-zinc-400 text-[11px] uppercase tracking-widest leading-loose"></div>
             <div id="node-action-zone"></div>
         </div>
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const S_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
+        const supabase = window.supabase.createClient(S_URL, S_KEY);
         let currentUser = null;
 
-        async function initAuth() {
+        async function init() {
             const { data } = await supabase.auth.signInAnonymously();
             currentUser = data.user;
         }
-        initAuth();
+        init();
 
         function openNode(id) {
             const modal = document.getElementById('node-modal');
@@ -97,58 +96,59 @@
             const action = document.getElementById('node-action-zone');
 
             modal.style.display = 'block';
-            title.innerText = id.charAt(0).toUpperCase() + id.slice(1);
+            title.innerText = id.toUpperCase();
 
-            if (id === 'identity') {
-                body.innerText = "System Identity Check...";
-                checkUser();
+            if (id === 'uplink') {
+                body.innerText = "Synchronizing Session...";
+                checkUplink();
             } else {
-                body.innerText = "Access Restricted to authorized operatives.";
+                body.innerText = "Sector access denied.";
                 action.innerHTML = "";
             }
         }
 
         function closeNode() { document.getElementById('node-modal').style.display = 'none'; }
 
-        async function checkUser() {
-            if (!currentUser) return;
+        async function checkUplink() {
             const { data: op } = await supabase.from('operatives').select('*').eq('id', currentUser.id).single();
-            
             if (op) {
-                renderPass(op.alias, op.id);
+                renderID(op.alias, op.id);
             } else {
-                document.getElementById('node-body').innerText = "Establish Operative Alias";
+                document.getElementById('node-body').innerText = "Register or Login with Alias";
                 document.getElementById('node-action-zone').innerHTML = `
-                    <input type="text" id="alias-input" placeholder="ENTER ALIAS">
-                    <button onclick="register()" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-widest">Link Identity →</button>
+                    <input type="text" id="alias-input" placeholder="ENTER CODE NAME">
+                    <button onclick="handleAuth()" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-widest">Connect to Network →</button>
                 `;
             }
         }
 
-        async function register() {
+        async function handleAuth() {
             const alias = document.getElementById('alias-input').value.trim().toUpperCase();
             if (!alias) return;
 
+            // Login check: Does this alias exist?
             const { data: existing } = await supabase.from('operatives').select('*').eq('alias', alias).single();
 
             if (existing) {
+                // Login: Link current session to found alias
                 await supabase.from('operatives').update({ id: currentUser.id }).eq('alias', alias);
-                renderPass(existing.alias, existing.id);
+                renderID(existing.alias, existing.id);
             } else {
+                // Register: New operative
                 const { error } = await supabase.from('operatives').insert([{ id: currentUser.id, alias: alias }]);
                 if (error) alert("RESERVED ALIAS");
-                else renderPass(alias, currentUser.id);
+                else renderID(alias, currentUser.id);
             }
         }
 
-        function renderPass(name, id) {
+        function renderID(name, id) {
             document.getElementById('node-body').innerHTML = `
-                <div id="qrcode" class="mb-6 p-2 bg-white inline-block"></div>
-                <div class="gold-text text-3xl font-bold italic mb-1">${name}</div>
+                <div id="qrcode" class="mb-6 p-2 bg-white inline-block shadow-2xl"></div>
+                <div class="gold-text text-3xl font-bold italic mb-1 tracking-tighter">${name}</div>
                 <div class="text-[8px] opacity-40 font-mono tracking-normal">UID: ${id}</div>
             `;
             document.getElementById('node-action-zone').innerHTML = `
-                <button onclick="downloadPass('${name}')" class="w-full py-4 bg-white text-black font-bold uppercase text-[10px] tracking-widest mt-4">Download Access Pass ↓</button>
+                <button onclick="downloadPass('${name}')" class="w-full py-4 bg-white text-black font-bold uppercase text-[10px] tracking-widest mt-4">Save Access Pass ↓</button>
             `;
             document.getElementById('qrcode').innerHTML = "";
             new QRCode(document.getElementById("qrcode"), { text: id, width: 140, height: 140 });
