@@ -16,17 +16,20 @@
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        .glass-tile { background: var(--panel); border: 1px solid rgba(212, 175, 55, 0.1); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
-        .glass-tile:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); transform: translateY(-2px); }
+        .glass-tile { background: var(--panel); border: 1px solid rgba(212, 175, 55, 0.1); transition: 0.3s; cursor: pointer; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .glass-tile:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); transform: translateY(-3px); }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 200; backdrop-filter: blur(25px); align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 200; backdrop-filter: blur(30px); align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
         .modal.active { display: flex; opacity: 1; }
 
-        input, textarea { background: #000 !important; border: 1px solid rgba(212,175,55,0.3) !important; color: #fff !important; padding: 1rem; width: 100%; font-size: 11px; outline: none; }
-        input:focus, textarea:focus { border-color: var(--gold) !important; }
+        input, textarea { background: #000 !important; border: 1px solid rgba(212,175,55,0.2) !important; color: #fff !important; padding: 14px; width: 100%; font-size: 10px; outline: none; letter-spacing: 1px; }
+        input:focus { border-color: var(--gold) !important; }
         
-        .vault-entry { border-left: 1px solid var(--gold); padding: 8px 12px; margin-bottom: 10px; background: rgba(255,255,255,0.02); text-align: left; }
+        .log-entry { border-left: 2px solid var(--gold); padding: 10px; margin-bottom: 12px; background: rgba(212,175,55,0.03); text-align: left; font-size: 10px; }
+        .msg-inbound { border-left-color: #00f3ff; background: rgba(0,243,255,0.03); }
+        .msg-global { border-left-color: #fff; background: rgba(255,255,255,0.02); }
         
+        #m-action-container { max-height: 60vh; overflow-y: auto; padding-right: 5px; }
         ::-webkit-scrollbar { width: 2px; }
         ::-webkit-scrollbar-thumb { background: var(--gold); }
     </style>
@@ -35,39 +38,37 @@
 
     <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
         <div class="serif text-2xl gold-text cursor-pointer" onclick="location.reload()">M.O.G.</div>
-        <div id="auth-status" class="text-[8px] tracking-[0.3em] text-zinc-500 uppercase flex items-center gap-2">
-            INITIALIZING... <div class="w-1.5 h-1.5 rounded-full bg-zinc-800" id="status-dot"></div>
+        <div id="auth-status" class="text-[7px] tracking-[0.4em] text-zinc-500 uppercase flex items-center gap-2">
+            SYNCING... <div class="w-1.5 h-1.5 rounded-full bg-zinc-800" id="status-dot"></div>
         </div>
     </nav>
 
     <main class="relative z-10 pt-32 px-8 max-w-lg mx-auto text-center">
         <h1 class="serif text-5xl gold-text mb-2 italic">MANIFEST</h1>
-        <p class="text-[9px] tracking-[0.6em] text-zinc-400 mb-12 uppercase">Sovereign Encryption Node</p>
+        <p class="text-[9px] tracking-[0.6em] text-zinc-500 mb-12 uppercase">Sovereign Command Terminal</p>
 
-        <div class="grid grid-cols-2 gap-5">
-            <div onclick="UI.open('auth')" class="glass-tile aspect-square flex flex-col items-center justify-center p-4">
-                <div class="text-[10px] tracking-widest uppercase font-black text-gold">Identity</div>
+        <div class="grid grid-cols-2 gap-4">
+            <div onclick="UI.open('auth')" class="glass-tile aspect-square">
+                <div class="text-[9px] tracking-widest uppercase font-black text-gold">Identity</div>
             </div>
-            <div onclick="UI.open('vault')" class="glass-tile aspect-square flex flex-col items-center justify-center p-4">
-                <div class="text-[10px] tracking-widest uppercase font-black text-gold">Vault</div>
+            <div onclick="UI.open('vault')" class="glass-tile aspect-square">
+                <div class="text-[9px] tracking-widest uppercase font-black text-gold">Vault</div>
             </div>
-            <div onclick="UI.open('crew')" class="glass-tile aspect-square flex flex-col items-center justify-center p-4 opacity-40">
-                <div class="text-[10px] tracking-widest uppercase font-black text-zinc-500">Crew</div>
+            <div onclick="UI.open('comms')" class="glass-tile aspect-square">
+                <div class="text-[9px] tracking-widest uppercase font-black text-gold">Transmit</div>
             </div>
-            <div onclick="UI.open('command')" class="glass-tile aspect-square flex flex-col items-center justify-center p-4 opacity-40">
-                <div class="text-[10px] tracking-widest uppercase font-black text-zinc-500">Command</div>
+            <div onclick="UI.open('global')" class="glass-tile aspect-square">
+                <div class="text-[9px] tracking-widest uppercase font-black text-gold">Global Log</div>
             </div>
         </div>
     </main>
 
     <div id="modal" class="modal">
-        <div class="p-8 w-full max-w-md h-full md:h-auto overflow-y-auto">
-            <h2 id="m-title" class="serif text-3xl gold-text mb-2 italic"></h2>
-            <div id="m-body" class="text-[10px] tracking-widest text-zinc-500 uppercase mb-8"></div>
-            <div id="m-action" class="space-y-4"></div>
-            <div class="mt-12">
-                <button onclick="UI.close()" class="text-[8px] text-zinc-600 tracking-[0.4em] uppercase hover:text-gold transition-all">Terminate Link</button>
-            </div>
+        <div class="p-8 w-full max-w-md text-center">
+            <h2 id="m-title" class="serif text-3xl gold-text mb-1 italic"></h2>
+            <div id="m-body" class="text-[9px] tracking-[0.4em] text-zinc-500 uppercase mb-8 border-b border-gold/10 pb-4"></div>
+            <div id="m-action-container"></div>
+            <button onclick="UI.close()" class="mt-12 text-[8px] text-zinc-600 tracking-[0.5em] uppercase hover:text-white transition-all">Terminate Link</button>
         </div>
     </div>
 
@@ -81,22 +82,24 @@
                 document.getElementById('modal').classList.add('active');
                 if(node === 'auth') Auth.check();
                 if(node === 'vault') Vault.load();
+                if(node === 'comms') Comms.load();
+                if(node === 'global') Global.load();
             },
             close: () => document.getElementById('modal').classList.remove('active'),
-            update: (title, body, action = "") => {
+            render: (title, body, action = "") => {
                 document.getElementById('m-title').innerText = title;
                 document.getElementById('m-body').innerHTML = body;
-                document.getElementById('m-action').innerHTML = action;
+                document.getElementById('m-action-container').innerHTML = action;
             }
         };
 
         const Auth = {
             user: null,
             init: async () => {
-                supabase.auth.onAuthStateChange((event, session) => {
+                supabase.auth.onAuthStateChange((_, session) => {
                     Auth.user = session?.user || null;
-                    document.getElementById('status-dot').style.background = Auth.user ? "#00f3ff" : "#333";
-                    document.getElementById('auth-status').innerText = Auth.user ? "LINK ESTABLISHED" : "LINK SEVERED";
+                    document.getElementById('status-dot').style.background = Auth.user ? "#D4AF37" : "#333";
+                    document.getElementById('auth-status').innerText = Auth.user ? "LINK ACTIVE" : "OFFLINE";
                 });
                 const { data } = await supabase.auth.getSession();
                 if(!data.session) await supabase.auth.signInAnonymously();
@@ -104,37 +107,58 @@
             check: async () => {
                 const { data: op } = await supabase.from('operatives').select('*').eq('id', Auth.user.id).single();
                 if(op) {
-                    UI.update(op.alias, `ID: ${op.id}`, `<div id="qr" class="bg-white p-2 inline-block mb-4"></div>`);
-                    new QRCode(document.getElementById("qr"), { text: op.id, width: 150, height: 150 });
+                    UI.render(op.alias, `ID: ${op.id}`, `<div id="qr" class="bg-white p-2 inline-block"></div>`);
+                    new QRCode(document.getElementById("qr"), { text: op.id, width: 140, height: 140 });
                 } else {
-                    UI.update("NEW IDENTITY", "Register alias", `<input id="a-in" placeholder="ALIAS"><button onclick="Auth.reg()" class="w-full bg-[#D4AF37] py-4 text-black font-black text-[10px]">REGISTER</button>`);
+                    UI.render("NEW IDENTITY", "Establish Alias", `<input id="a-in" placeholder="ALIAS"><button onclick="Auth.reg()" class="w-full bg-[#D4AF37] py-4 text-black font-black text-[10px]">INITIALIZE</button>`);
                 }
             },
             reg: async () => {
                 const alias = document.getElementById('a-in').value.toUpperCase();
-                await supabase.from('operatives').insert([{ id: Auth.user.id, alias }]);
+                if(alias) await supabase.from('operatives').insert([{ id: Auth.user.id, alias }]);
                 Auth.check();
             }
         };
 
         const Vault = {
             load: async () => {
-                UI.update("THE VAULT", "Accessing Encrypted Records...", "<div class='animate-pulse'>DECRYPTING...</div>");
                 const { data } = await supabase.from('vault').select('*').eq('user_id', Auth.user.id).order('created_at', { ascending: false });
-                
-                let list = data?.map(item => `<div class="vault-entry"><div class="text-white mb-1">${item.content}</div><div class="text-[7px] text-zinc-600">${new Date(item.created_at).toLocaleString()}</div></div>`).join('') || "NO RECORDS FOUND";
-                
-                UI.update("THE VAULT", "Encrypted Manifesto Storage", `
-                    <div class="max-h-48 overflow-y-auto mb-6">${list}</div>
-                    <textarea id="v-in" placeholder="NEW SECRET ENTRY..." rows="3"></textarea>
-                    <button onclick="Vault.save()" class="w-full border border-gold text-gold py-4 font-bold text-[10px]">COMMIT TO VAULT</button>
-                `);
+                const list = data?.map(i => `<div class="log-entry">${i.content}</div>`).join('') || "NO DATA";
+                UI.render("VAULT", "Encrypted Manifesto", `<div class="mb-4">${list}</div><textarea id="v-in" placeholder="NEW SECRET..." rows="2"></textarea><button onclick="Vault.save()" class="w-full border border-gold text-gold py-3 text-[9px]">COMMIT</button>`);
             },
             save: async () => {
                 const content = document.getElementById('v-in').value;
-                if(!content) return;
-                await supabase.from('vault').insert([{ user_id: Auth.user.id, content }]);
+                if(content) await supabase.from('vault').insert([{ user_id: Auth.user.id, content }]);
                 Vault.load();
+            }
+        };
+
+        const Comms = {
+            load: async () => {
+                const { data } = await supabase.from('transmissions').select('*, from:operatives!sender_id(alias)').eq('recipient_id', Auth.user.id).order('created_at', { ascending: false });
+                const list = data?.map(m => `<div class="log-entry msg-inbound">FROM: ${m.from?.alias || '???'}<br>${m.message}</div>`).join('') || "NO SIGNALS";
+                UI.render("TRANSMIT", "Private Packets", `<div class="mb-4">${list}</div><input id="c-target" placeholder="TARGET ALIAS"><textarea id="c-msg" placeholder="MESSAGE..." rows="2"></textarea><button onclick="Comms.send()" class="w-full bg-white text-black py-4 font-black text-[10px]">DISPATCH</button>`);
+            },
+            send: async () => {
+                const target = document.getElementById('c-target').value.toUpperCase();
+                const msg = document.getElementById('c-msg').value;
+                const { data: op } = await supabase.from('operatives').select('id').eq('alias', target).single();
+                if(!op) return alert("UNKNOWN TARGET");
+                await supabase.from('transmissions').insert([{ sender_id: Auth.user.id, recipient_id: op.id, message: msg }]);
+                Comms.load();
+            }
+        };
+
+        const Global = {
+            load: async () => {
+                const { data } = await supabase.from('global_log').select('*, from:operatives!user_id(alias)').order('created_at', { ascending: false }).limit(20);
+                const list = data?.map(g => `<div class="log-entry msg-global"><span class="text-gold">[${g.from?.alias || 'ANON'}]</span>: ${g.content}</div>`).join('') || "LOG EMPTY";
+                UI.render("GLOBAL LOG", "Public Broadcast Feed", `<div class="mb-4">${list}</div><textarea id="g-in" placeholder="BROADCAST TO NETWORK..." rows="2"></textarea><button onclick="Global.post()" class="w-full bg-[#D4AF37] text-black py-4 font-black text-[10px]">POST SIGNAL</button>`);
+            },
+            post: async () => {
+                const content = document.getElementById('g-in').value;
+                if(content) await supabase.from('global_log').insert([{ user_id: Auth.user.id, content }]);
+                Global.load();
             }
         };
 
