@@ -6,6 +6,8 @@
     <title>M.O.G. | MANIFEST</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
 
     <style>
@@ -14,54 +16,140 @@
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        /* The Panel Design */
-        .glass-tile { background: var(--panel); border: 1px solid rgba(255,255,255,0.05); transition: 0.3s ease; cursor: pointer; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; aspect-ratio: 1/1; }
-        .glass-tile:hover { border-color: var(--gold); transform: scale(1.02); background: rgba(212, 175, 55, 0.05); }
+        /* Dashboard Tiles */
+        .glass-tile { background: var(--panel); border: 1px solid rgba(255,255,255,0.05); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; aspect-ratio: 1/1; }
+        .glass-tile:hover { border-color: var(--gold); transform: translateY(-5px); background: rgba(212, 175, 55, 0.05); }
         
-        /* Simplified Ritual - Fast & Reliable */
-        #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: fadeOut 1s ease 2s forwards; pointer-events: none; }
+        /* Sovereign Modals */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; backdrop-filter: blur(15px); transition: 0.5s; }
+        .modal-content { background: #0c0c0c; border: 1px solid var(--gold); max-width: 450px; width: 92%; margin: 12vh auto; padding: 2.5rem; border-radius: 4px; position: relative; }
+        .close-btn { position: absolute; top: 1.5rem; right: 1.5rem; color: var(--gold); font-size: 20px; cursor: pointer; }
+        
+        #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: fadeOut 1.2s ease 2.5s forwards; pointer-events: none; }
         @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-        
         #video-bg { position: fixed; inset: 0; z-index: -10; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; filter: grayscale(100%); }
+        input { background: #000 !important; border: 1px solid rgba(212, 175, 55, 0.3) !important; color: #fff !important; }
     </style>
 </head>
 <body>
 
     <div id="ritual-overlay">
-        <img src="logo.png" class="w-20 h-20 mb-4 animate-pulse">
-        <div class="text-[10px] tracking-[0.3em] text-gold uppercase opacity-50">Syncing System...</div>
+        <img src="logo.png" class="w-24 h-24 mb-4 animate-pulse">
+        <div class="text-[10px] tracking-[0.4em] text-gold uppercase opacity-60 font-mono">> INITIATING SOVEREIGN PROTOCOL...</div>
     </div>
 
     <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
 
     <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
-        <div class="serif text-2xl gold-text">M.O.G.</div>
+        <div class="serif text-2xl gold-text tracking-tighter" onclick="location.reload()">M.O.G.</div>
         <div class="flex items-center gap-2">
-            <div class="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
-            <span class="text-[8px] uppercase tracking-widest text-cyan-400">Signal: Open</span>
+            <div class="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_10px_#00f2ff]"></div>
+            <span class="text-[8px] uppercase tracking-widest text-cyan-400">Signal: Secure</span>
         </div>
     </nav>
 
-    <main class="relative z-10 pt-32 px-6 max-w-lg mx-auto text-center">
-        <img src="logo.png" class="w-24 h-24 mx-auto mb-6 border border-gold/10 rounded-full">
+    <main class="relative z-10 pt-28 px-8 max-w-lg mx-auto text-center h-screen overflow-y-auto pb-40">
+        <img src="logo.png" class="w-28 h-28 mx-auto mb-6 border border-gold/10 rounded-full shadow-2xl">
         <h1 class="serif text-5xl gold-text mb-1 italic">MANIFEST</h1>
-        <p class="text-[9px] tracking-[0.4em] text-zinc-500 mb-10 uppercase">Sovereign Interface</p>
+        <p class="text-[9px] tracking-[0.4em] text-zinc-500 mb-12 uppercase">Sovereign Command Interface</p>
 
-        <div class="grid grid-cols-2 gap-4">
-            <div class="glass-tile" onclick="alert('Accessing Identity...')">
+        <div class="grid grid-cols-2 gap-5">
+            <div onclick="openNode('identity')" class="glass-tile">
                 <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Identity</div>
             </div>
-            <div class="glass-tile" onclick="alert('Accessing Vault...')">
+            <div onclick="openNode('gallery')" class="glass-tile">
                 <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Vault</div>
             </div>
-            <div class="glass-tile" onclick="alert('Accessing Crew...')">
+            <div onclick="openNode('crew')" class="glass-tile">
                 <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Crew</div>
             </div>
-            <div class="glass-tile" onclick="alert('Accessing Command...')">
+            <div onclick="openNode('access')" class="glass-tile">
                 <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Command</div>
             </div>
         </div>
     </main>
 
+    <div id="node-modal" class="modal">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-btn" onclick="closeNode()">&times;</span>
+            <h2 id="node-title" class="serif text-3xl gold-text mb-2 italic"></h2>
+            <p id="node-subtitle" class="text-[9px] text-zinc-500 mb-8 tracking-[0.3em] uppercase">Access Node</p>
+            
+            <div id="node-body" class="mb-10 text-zinc-400 text-[12px] leading-relaxed"></div>
+            
+            <div id="node-action-zone"></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
+        const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+        let currentUser = null;
+
+        const NODES = {
+            identity: {
+                title: "Identity",
+                body: "Establish your unique operative alias and secure your identity within the M.O.G. network.",
+                action: `<input type="text" id="alias-input" placeholder="ENTER ALIAS" class="w-full p-4 mb-4 text-center text-[11px] tracking-widest uppercase outline-none"><button onclick="register()" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-widest">Verify Identity →</button>`
+            },
+            gallery: {
+                title: "Vault",
+                body: "Access classified visual intelligence and mission documentation. Review operational imagery from current archives.",
+                action: `<button onclick="closeNode()" class="w-full py-4 border border-gold text-gold font-bold uppercase text-[10px] tracking-widest">Initialize Archive →</button>`
+            },
+            crew: {
+                title: "Crew",
+                body: "Monitor operative status and receive live command broadcasts within the sector.",
+                action: `<div id="crew-display" class="space-y-2 mb-6 max-h-32 overflow-y-auto"></div><button onclick="loadCrew()" class="w-full py-4 border border-gold/30 text-gold/60 text-[9px] uppercase tracking-widest">Refresh Signal</button>`
+            },
+            access: {
+                title: "Command",
+                body: "Director-level authentication and clearance verification. Restricted to authorized leadership personnel.",
+                action: `<input type="password" id="cmd-key" placeholder="CLEARANCE CODE" class="w-full p-4 mb-4 text-center outline-none"><button onclick="auth()" class="w-full py-4 bg-gold text-black font-bold uppercase text-[10px]">Authorize Entry →</button>`
+            }
+        };
+
+        function openNode(id) {
+            const node = NODES[id];
+            document.getElementById('node-title').innerText = node.title;
+            document.getElementById('node-body').innerText = node.body;
+            document.getElementById('node-action-zone').innerHTML = node.action;
+            document.getElementById('node-modal').style.display = 'block';
+            if(id === 'identity') checkUserStatus();
+        }
+
+        function closeNode() { document.getElementById('node-modal').style.display = 'none'; }
+
+        async function checkUserStatus() {
+            try {
+                const { data } = await supabase.auth.signInAnonymously();
+                currentUser = data.user;
+                const { data: op } = await supabase.from('operatives').select('alias').eq('id', currentUser.id).single();
+                if(op) {
+                    document.getElementById('node-body').innerHTML = `<div class='text-center'><div id='qr' class='inline-block p-2 bg-white mb-4'></div><div class='gold-text font-bold'>VERIFIED: ${op.alias}</div></div>`;
+                    document.getElementById('node-action-zone').innerHTML = "";
+                    new QRCode(document.getElementById("qr"), { text: op.alias, width: 140, height: 140 });
+                }
+            } catch(e) { console.warn("Syncing..."); }
+        }
+
+        async function register() {
+            const alias = document.getElementById('alias-input').value;
+            if(!alias || !currentUser) return alert("SIGNAL INTERRUPTED");
+            await supabase.from('operatives').upsert([{ id: currentUser.id, alias }]);
+            checkUserStatus();
+        }
+
+        async function loadCrew() {
+            const { data } = await supabase.from('operatives').select('alias');
+            document.getElementById('crew-display').innerHTML = data.map(o => `<div class='p-3 border-b border-white/5 text-[10px] tracking-widest'>${o.alias.toUpperCase()}</div>`).join('');
+        }
+
+        function auth() {
+            if(document.getElementById('cmd-key').value === '7486') alert("COMMAND CLEARANCE GRANTED");
+            else alert("ACCESS DENIED");
+        }
+    </script>
 </body>
 </html>
