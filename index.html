@@ -12,35 +12,50 @@
 
     <style>
         :root { --gold: #D4AF37; --bg: #050505; --panel: #0a0a0a; }
-        body { background-color: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; touch-action: manipulation; }
+        body { background-color: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; -webkit-tap-highlight-color: transparent; }
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        /* THE TILE ENGINE */
+        /* RE-ENGINEERED TILE ENGINE */
+        .dashboard-grid { display: grid; grid-template-cols: repeat(2, 1fr); gap: 1rem; perspective: 1000px; }
+        
         .glass-tile { 
             background: var(--panel); 
-            border: 1px solid rgba(212, 175, 55, 0.2); 
-            transition: all 0.2s ease; 
-            cursor: pointer; 
+            border: 1px solid rgba(212, 175, 55, 0.3); 
+            aspect-ratio: 1/1;
             border-radius: 4px; 
             display: flex; 
-            flex-direction: column; 
             align-items: center; 
             justify-content: center; 
-            aspect-ratio: 1/1;
+            cursor: pointer;
             position: relative;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
         }
-        .glass-tile:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.1); transform: translateY(-4px); }
-        .glass-tile:active { transform: scale(0.95); background: var(--gold); }
-        .glass-tile:active div { color: #000 !important; }
 
-        /* MODAL */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 2000; backdrop-filter: blur(20px); }
-        .modal-content { background: #0c0c0c; border: 1px solid var(--gold); max-width: 420px; width: 90%; margin: 12vh auto; padding: 2.5rem; position: relative; }
+        /* Tactical Response States */
+        .glass-tile:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.1); transform: translateY(-4px); }
+        .glass-tile:active { transform: scale(0.92); background: var(--gold); }
+        .glass-tile:active span { color: #000 !important; }
+
+        /* MODAL SYSTEM */
+        #node-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 9999; backdrop-filter: blur(20px); }
+        .modal-content { 
+            background: #0c0c0c; 
+            border: 1px solid var(--gold); 
+            max-width: 420px; 
+            width: 90%; 
+            margin: 10vh auto; 
+            padding: 2rem; 
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,1);
+            animation: modalSlide 0.4s ease-out;
+        }
+        @keyframes modalSlide { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        input { background: #000 !important; border: 1px solid var(--gold) !important; color: #fff !important; text-align: center; border-radius: 0px !important; width: 100%; padding: 1rem; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px; }
         
-        input { background: #000 !important; border: 1px solid var(--gold) !important; color: #fff !important; text-align: center; border-radius: 0px !important; width: 100%; padding: 1rem; margin-bottom: 1rem; text-transform: uppercase; font-size: 12px; letter-spacing: 2px; }
-        
-        #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; justify-content: center; align-items: center; animation: fadeOut 1s ease 2s forwards; pointer-events: none; }
+        #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; justify-content: center; align-items: center; animation: fadeOut 1s ease 2s forwards; pointer-events: none; }
         @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
         #video-bg { position: fixed; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; filter: grayscale(100%); pointer-events: none; }
     </style>
@@ -48,84 +63,95 @@
 <body>
 
     <div id="ritual-overlay">
-        <div class="text-[10px] tracking-[0.5em] text-gold animate-pulse uppercase">> ACCESSING MANTRA...</div>
+        <div class="text-[10px] tracking-[0.5em] text-gold animate-pulse uppercase">> UPLINKING...</div>
     </div>
 
     <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
 
     <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
         <div class="serif text-2xl gold-text tracking-tighter cursor-pointer" onclick="location.reload()">M.O.G.</div>
-        <div class="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_10px_#00f2ff]"></div>
+        <div class="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_10px_#00f2ff]"></div>
     </nav>
 
     <main class="relative z-10 pt-24 px-8 max-w-lg mx-auto text-center h-screen overflow-y-auto">
-        <img src="logo.png" class="w-24 h-24 mx-auto mb-6 border border-gold/20 rounded-full">
+        <img src="logo.png" class="w-24 h-24 mx-auto mb-6 border border-gold/20 rounded-full shadow-2xl">
         <h1 class="serif text-5xl gold-text mb-1 italic">MANIFEST</h1>
-        <p class="text-[9px] tracking-[0.5em] text-zinc-500 mb-12 uppercase">Sovereign Portal</p>
+        <p class="text-[9px] tracking-[0.5em] text-zinc-500 mb-12 uppercase">Tactical Command</p>
 
-        <div class="grid grid-cols-2 gap-4">
-            <div id="tile-identity" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold pointer-events-none">Identity</div>
+        <div class="dashboard-grid">
+            <div id="btn-identity" class="glass-tile">
+                <span class="text-[10px] tracking-widest uppercase font-bold text-gold">Identity</span>
             </div>
-            <div id="tile-vault" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold pointer-events-none">Vault</div>
+            <div id="btn-vault" class="glass-tile">
+                <span class="text-[10px] tracking-widest uppercase font-bold text-gold">Vault</span>
             </div>
-            <div id="tile-crew" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold pointer-events-none">Crew</div>
+            <div id="btn-crew" class="glass-tile">
+                <span class="text-[10px] tracking-widest uppercase font-bold text-gold">Crew</span>
             </div>
-            <div id="tile-command" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold pointer-events-none">Command</div>
+            <div id="btn-command" class="glass-tile">
+                <span class="text-[10px] tracking-widest uppercase font-bold text-gold">Command</span>
             </div>
         </div>
     </main>
 
-    <div id="node-modal" class="modal">
+    <div id="node-modal">
         <div class="modal-content">
             <span class="absolute top-4 right-6 text-gold text-2xl cursor-pointer" id="close-modal">&times;</span>
             <h2 id="modal-title" class="serif text-3xl gold-text mb-2 italic text-center"></h2>
-            <div id="modal-body" class="text-zinc-400 text-[10px] leading-relaxed uppercase tracking-[0.2em] text-center mb-8"></div>
+            <div id="modal-body" class="text-zinc-400 text-[10px] uppercase tracking-[0.2em] text-center mb-8"></div>
             <div id="modal-action"></div>
         </div>
     </div>
 
     <script>
+        // DB CONFIG
         const S_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
-        const supabase = window.supabase.createClient(S_URL, S_KEY);
+        const supabase = window.supabase ? window.supabase.createClient(S_URL, S_KEY) : null;
         let currentUser = null;
 
-        // Initialize Auth
+        // AUTH INITIALIZATION
         async function init() {
             const { data } = await supabase.auth.signInAnonymously();
             currentUser = data.user;
         }
         init();
 
-        // Event Listeners for Tiles
-        document.getElementById('tile-identity').onclick = () => openIdentity();
-        document.getElementById('close-modal').onclick = () => document.getElementById('node-modal').style.display = 'none';
+        // FAIL-SAFE TILE TRIGGERING
+        const modal = document.getElementById('node-modal');
+        const closeModal = document.getElementById('close-modal');
+
+        // Identity Tile Click
+        document.getElementById('btn-identity').addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log("Identity Triggered");
+            openIdentity();
+        });
+
+        closeModal.onclick = () => modal.style.display = 'none';
 
         async function openIdentity() {
-            const modal = document.getElementById('node-modal');
+            modal.style.display = 'block';
             const title = document.getElementById('modal-title');
             const body = document.getElementById('modal-body');
             const action = document.getElementById('modal-action');
 
-            modal.style.display = 'block';
             title.innerText = "Identity";
-            
-            // Check if user already has an operative profile
+            body.innerText = "System Check: Authenticating Operative...";
+            action.innerHTML = `<div class="animate-pulse text-gold text-[10px]">READING DATABASE...</div>`;
+
+            // Check if user exists
             const { data: op } = await supabase.from('operatives').select('*').eq('id', currentUser.id).single();
 
             if (op) {
                 renderIDPass(op.alias, op.id);
             } else {
-                body.innerText = "Register your alias or login with an existing code name.";
+                body.innerText = "Entry Portal: Register or Login with Alias";
                 action.innerHTML = `
                     <input type="text" id="alias-input" placeholder="ENTER ALIAS">
-                    <button onclick="handleIdentity()" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-widest">Verify & Access →</button>
-                    <p class="text-[8px] text-zinc-600 mt-4 tracking-widest">NEW MEMBERS WILL BE REGISTERED AUTOMATICALLY</p>
+                    <button id="auth-submit" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-widest">Verify & Link</button>
                 `;
+                document.getElementById('auth-submit').onclick = handleIdentity;
             }
         }
 
@@ -133,18 +159,17 @@
             const alias = document.getElementById('alias-input').value.trim().toUpperCase();
             if (!alias) return;
 
-            // 1. Try to find if this alias exists (Login check)
+            // Check if alias exists anywhere
             const { data: existing } = await supabase.from('operatives').select('*').eq('alias', alias).single();
 
             if (existing) {
-                // Login: Link current session to existing alias ID
-                // Note: In a production app, you'd use a password here.
+                // Login Flow
                 await supabase.from('operatives').update({ id: currentUser.id }).eq('alias', alias);
                 renderIDPass(existing.alias, existing.id);
             } else {
-                // Registration: Create new entry
+                // Register Flow
                 const { error } = await supabase.from('operatives').insert([{ id: currentUser.id, alias: alias }]);
-                if (error) alert("ALIAS RESERVED OR SYSTEM ERROR");
+                if (error) alert("RESERVED ALIAS");
                 else renderIDPass(alias, currentUser.id);
             }
         }
@@ -152,34 +177,31 @@
         function renderIDPass(name, id) {
             const body = document.getElementById('modal-body');
             const action = document.getElementById('modal-action');
-            
             body.innerHTML = `
                 <div class="flex flex-col items-center">
-                    <div id="qrcode" class="p-2 bg-white mb-6 border-4 border-gold/20"></div>
-                    <div class="gold-text text-3xl font-bold tracking-tighter serif">${name}</div>
-                    <div class="text-[8px] mt-2 opacity-40 font-mono tracking-normal">SESSION_ID: ${id}</div>
+                    <div id="qrcode" class="p-2 bg-white mb-6"></div>
+                    <div class="gold-text text-3xl font-bold serif tracking-tighter">${name}</div>
+                    <div class="text-[8px] mt-2 opacity-40">UID: ${id}</div>
                 </div>
             `;
             action.innerHTML = `
-                <button onclick="downloadID('${name}')" class="w-full py-4 bg-white text-black font-bold uppercase text-[10px] tracking-widest mb-2">Download Access Pass ↓</button>
-                <button onclick="logout()" class="w-full py-2 text-red-900 text-[8px] uppercase tracking-widest opacity-60">Disconnect Identity</button>
+                <button onclick="downloadID('${name}')" class="w-full py-4 bg-white text-black font-bold uppercase text-[10px] tracking-widest">Download Pass ↓</button>
             `;
-            
             new QRCode(document.getElementById("qrcode"), { text: id, width: 140, height: 140 });
         }
 
         function downloadID(name) {
             const img = document.querySelector('#qrcode img');
             const link = document.createElement('a');
-            link.download = `MOG_ACCESS_${name}.png`;
+            link.download = `MOG_ID_${name}.png`;
             link.href = img.src;
             link.click();
         }
 
-        async function logout() {
-            // For this sovereign setup, we just clear the local view and re-init
-            location.reload();
-        }
+        // Vault/Crew/Command Stubs
+        document.getElementById('btn-vault').onclick = () => alert("VAULT ACCESS DENIED");
+        document.getElementById('btn-crew').onclick = () => alert("CREW SIGNAL LOST");
+        document.getElementById('btn-command').onclick = () => alert("COMMAND UNAUTHORIZED");
     </script>
 </body>
 </html>
