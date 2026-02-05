@@ -22,6 +22,10 @@
         input, textarea { background: rgba(255,255,255,0.02) !important; border: 1px solid rgba(212,175,55,0.2) !important; color: #fff !important; padding: 12px; width: 100%; font-size: 10px; outline: none; }
         .director-glow { text-shadow: 0 0 10px var(--gold); }
         .director-tile { border: 1px double var(--gold) !important; box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.1); }
+        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--gold); }
+        .purge-btn { color: #444; transition: 0.2s; }
+        .purge-btn:hover { color: #ff4444; text-shadow: 0 0 8px #ff4444; }
     </style>
 </head>
 <body id="terminal-body">
@@ -41,25 +45,17 @@
             <div onclick="UI.open('files')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Binary Store</div></div>
             <div onclick="UI.open('comms')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Transmit</div></div>
             <div onclick="UI.open('global')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Global Log</div></div>
-            </div>
+        </div>
 
         <div class="mt-8 flex justify-between text-[7px] text-zinc-700 tracking-widest uppercase px-2">
             <span onclick="System.decommission()" class="cursor-pointer hover:text-red-600">>> Wipe Local</span>
-            <span>Ver. 5.4.0_Director_Console</span>
+            <span>Ver. 5.5.0_Director_Purge</span>
         </div>
     </main>
 
-    <div id="modal" class="modal">
-        <div class="p-8 w-full max-w-md text-center">
-            <h2 id="m-title" class="serif text-3xl gold-text mb-1 italic"></h2>
-            <div id="m-body" class="text-[9px] tracking-[0.4em] text-zinc-500 uppercase mb-8 border-b border-gold/10 pb-4"></div>
-            <div id="m-action-container" class="max-h-[40vh] overflow-y-auto custom-scrollbar"></div>
-            <button onclick="UI.close()" class="mt-12 text-[8px] text-zinc-600 tracking-[0.5em] uppercase hover:text-white transition-all">Terminate Link</button>
-        </div>
-    </div>
+    <div id="modal" class="modal"><div class="p-8 w-full max-w-md text-center"><h2 id="m-title" class="serif text-3xl gold-text mb-1 italic"></h2><div id="m-body" class="text-[9px] tracking-[0.4em] text-zinc-500 uppercase mb-8 border-b border-gold/10 pb-4"></div><div id="m-action-container" class="max-h-[40vh] overflow-y-auto custom-scrollbar"></div><button onclick="UI.close()" class="mt-12 text-[8px] text-zinc-600 tracking-[0.5em] uppercase hover:text-white transition-all">Terminate Link</button></div></div>
 
     <script>
-        // --- CONFIGURATION ---
         const S_URL = 'YOUR_SUPABASE_URL';
         const S_KEY = 'YOUR_SUPABASE_ANON_KEY';
         const supabase = window.supabase.createClient(S_URL, S_KEY);
@@ -120,8 +116,6 @@
                     Auth.user = s?.user || null;
                     if(Auth.user) {
                         const { data: op } = await supabase.from('operatives').select('alias, is_admin').eq('id', Auth.user.id).single();
-                        
-                        // Check for Director credentials
                         const isDirector = Auth.user.email === 'director.mog@gmail.com';
                         Auth.isAdmin = op?.is_admin || isDirector;
 
@@ -171,23 +165,89 @@
             },
             load: async () => {
                 UI.render("DIRECTOR CONSOLE", "High-Level Operative Manifest", `<div id="d-list" class="space-y-2"></div>`);
-                const { data, error } = await supabase.from('operatives').select('alias, last_seen, id');
-                
-                // Note: For email visibility, your DB must have a mechanism to link 
-                // auth.users emails to this view, usually via a view or service role.
+                const { data, error } = await supabase.from('director_manifest').select('*');
                 const list = document.getElementById('d-list');
                 if(data) {
                     data.forEach(op => {
                         const entry = document.createElement('div');
-                        entry.className = "log-entry border-gold/50";
+                        entry.className = "log-entry border-gold/50 flex justify-between items-center";
                         entry.innerHTML = `
-                            <div class="flex justify-between items-center">
-                                <span class="text-gold font-bold">${op.alias || 'UNREGISTERED'}</span>
-                                <span class="text-[8px] text-zinc-500">${new Date(op.last_seen).toLocaleDateString()}</span>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gold font-bold">${op.alias || 'UNREGISTERED'}</span>
+                                    <span class="text-[7px] text-zinc-500 uppercase italic tracking-tighter">${op.email}</span>
+                                </div>
+                                <div class="text-[8px] mt-1 text-zinc-500 opacity-60">
+                                    ID: ${op.id.substring(0,8)}... | LAST: ${new Date(op.last_seen).toLocaleTimeString()}
+                                </div>
                             </div>
-                            <div class="text-[8px] mt-1 text-zinc-400 opacity-60 lowercase tracking-normal">
-                                ID: ${op.id}
-                            </div>
+                            <button onclick="Director.purge('${op.id}', '${op.alias}')" class="purge-btn text-[10px] font-black px-2">✕</button>
                         `;
-                        list.appendChild(
-        
+                        list.appendChild(entry);
+                    });
+                } else {
+                    list.innerHTML = `<div class="text-red-500 text-[8px]">ENCRYPTED ACCESS ONLY: ${error?.message}</div>`;
+                }
+            },
+            purge: async (uid, alias) => {
+                if(confirm(`DECOMMISSION OPERATIVE [${alias}]? THIS ACTION IS IRREVERSIBLE.`)) {
+                    Sound.play(200, 0.5, 'sawtooth');
+                    const { error } = await supabase.from('operatives').delete().eq('id', uid);
+                    if(!error) Director.load();
+                    else alert("PURGE FAILED: INSUFFICIENT CLEARANCE");
+                }
+            }
+        };
+
+        const Network = {
+            heartbeat: async () => {
+                if(Auth.user) await supabase.from('operatives').update({ last_seen: new Date().toISOString() }).eq('id', Auth.user.id);
+                const { count } = await supabase.from('operatives').select('*', { count: 'exact', head: true }).gt('last_seen', new Date(Date.now() - 300000).toISOString());
+                document.getElementById('online-count').innerText = count || 1;
+            }
+        };
+
+        const Files = {
+            load: async () => {
+                UI.render("BINARY STORE", "Private Asset Vault", `<div id="file-list" class="mb-4 space-y-2"></div><input type="file" id="file-in" class="hidden" onchange="Files.upload()"><button onclick="document.getElementById('file-in').click()" class="w-full border border-gold text-gold py-4 text-[9px] font-bold">UPLOAD DATA</button>`);
+                const { data } = await supabase.storage.from('manifest-store').list(Auth.user.id);
+                document.getElementById('file-list').innerHTML = data?.map(f => `<div class="log-entry flex justify-between"><span>${f.name}</span> <a href="${S_URL}/storage/v1/object/public/manifest-store/${Auth.user.id}/${f.name}" target="_blank" class="text-gold">OPEN</a></div>`).join('') || "NO DATA PACKETS FOUND";
+            },
+            upload: async () => {
+                const file = document.getElementById('file-in').files[0];
+                if(file && Auth.user) {
+                    await supabase.storage.from('manifest-store').upload(`${Auth.user.id}/${file.name}`, file);
+                    Files.load();
+                }
+            }
+        };
+
+        const Global = {
+            load: async () => {
+                UI.render("GLOBAL LOG", "Network Broadcast", `<div id="g-list" class="mb-4 max-h-[200px] overflow-y-auto custom-scrollbar"></div><textarea id="g-in" placeholder="EMIT SIGNAL..."></textarea><button onclick="Global.post()" class="w-full bg-[#D4AF37] text-black py-4 font-black text-[10px] mt-2">BROADCAST</button>`);
+                const { data } = await supabase.from('global_log').select('*, from:operatives!user_id(alias)').order('created_at', { ascending: false }).limit(10);
+                const list = document.getElementById('g-list');
+                for (const g of (data || [])) {
+                    const el = document.createElement('div'); el.className = "log-entry";
+                    list.appendChild(el);
+                    await Typer.type(el, `[${g.from?.alias || 'ANON'}] >> ${g.content}`);
+                }
+            },
+            post: async () => {
+                const content = document.getElementById('g-in').value;
+                if(content && Auth.user) {
+                    const { error } = await supabase.from('global_log').insert([{ user_id: Auth.user.id, content: content }]);
+                    if(error) alert("SIGNAL FAILED: REGISTER IDENTITY FIRST");
+                    else { document.getElementById('g-in').value = ""; Global.load(); }
+                }
+            }
+        };
+
+        const System = {
+            decommission: async () => { if(confirm("TERMINATE CONNECTION?")) { await supabase.auth.signOut(); location.reload(); } }
+        };
+
+        Auth.init();
+    </script>
+</body>
+</html>
