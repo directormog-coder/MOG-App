@@ -16,10 +16,10 @@
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        /* RESPONSIVE TILE ENGINE */
+        /* RESPONSIVE TILE SYSTEM */
         .glass-tile { 
             background: var(--panel); 
-            border: 1px solid rgba(212, 175, 55, 0.1); 
+            border: 1px solid rgba(212, 175, 55, 0.15); 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
             cursor: pointer; 
             border-radius: 4px; 
@@ -31,17 +31,15 @@
             position: relative;
             overflow: hidden;
         }
-        
-        /* REACTIVE FEEDBACK */
         .glass-tile:hover { 
             border-color: var(--gold); 
             transform: translateY(-5px); 
             background: rgba(212, 175, 55, 0.08);
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.2);
         }
-        .glass-tile:active { transform: scale(0.95); opacity: 0.8; }
+        .glass-tile:active { transform: scale(0.95); filter: brightness(1.2); }
 
-        /* MODAL STYLING */
+        /* MODAL & UI COMPONENTS */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; backdrop-filter: blur(15px); }
         .modal-content { background: #0c0c0c; border: 1px solid var(--gold); max-width: 450px; width: 92%; margin: 10vh auto; padding: 2.5rem; border-radius: 2px; position: relative; }
         .close-btn { position: absolute; top: 1.5rem; right: 1.5rem; color: var(--gold); font-size: 24px; cursor: pointer; }
@@ -50,14 +48,17 @@
         @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
         #video-bg { position: fixed; inset: 0; z-index: -10; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; filter: grayscale(100%); }
         
-        input { background: #000 !important; border: 1px solid rgba(212, 175, 55, 0.3) !important; color: #fff !important; text-align: center; }
-        #qr-code canvas, #qr-code img { margin: 0 auto; border: 4px solid white; border-radius: 2px; }
+        input { background: #000 !important; border: 1px solid rgba(212, 175, 55, 0.3) !important; color: #fff !important; text-align: center; border-radius: 0px !important; }
+        #qr-container canvas, #qr-container img { margin: 0 auto; border: 6px solid white; border-radius: 2px; }
+        
+        /* Mobile adjustment */
+        @media (max-height: 700px) { .modal-content { margin: 5vh auto; padding: 1.5rem; } }
     </style>
 </head>
 <body>
 
     <div id="ritual-overlay">
-        <div class="text-[10px] tracking-[0.5em] text-gold animate-pulse uppercase font-mono">> ENCRYPTING SESSION...</div>
+        <div class="text-[10px] tracking-[0.5em] text-gold animate-pulse uppercase font-mono">> SYNCHRONIZING WITH COMMAND...</div>
     </div>
 
     <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
@@ -66,12 +67,12 @@
         <div class="serif text-2xl gold-text tracking-tighter cursor-pointer" onclick="location.reload()">M.O.G.</div>
         <div class="flex items-center gap-2">
             <div class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_10px_#00f2ff]"></div>
-            <span class="text-[8px] uppercase tracking-widest text-cyan-400">SIGNAL: ACTIVE</span>
+            <span class="text-[8px] uppercase tracking-widest text-cyan-400">Status: Encrypted</span>
         </div>
     </nav>
 
     <main class="relative z-10 pt-24 px-8 max-w-lg mx-auto text-center h-screen overflow-y-auto pb-32">
-        <img src="logo.png" class="w-24 h-24 mx-auto mb-6 border border-gold/10 rounded-full">
+        <img src="logo.png" class="w-24 h-24 mx-auto mb-6 border border-gold/10 rounded-full shadow-2xl">
         <h1 class="serif text-5xl gold-text mb-1 italic">MANIFEST</h1>
         <p class="text-[9px] tracking-[0.4em] text-zinc-500 mb-12 uppercase">Sovereign Command Interface</p>
 
@@ -94,14 +95,15 @@
     <div id="node-modal" class="modal" onclick="closeNode()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <span class="close-btn" onclick="closeNode()">&times;</span>
-            <h2 id="node-title" class="serif text-3xl gold-text mb-2 italic"></h2>
-            <p id="node-subtitle" class="text-[8px] text-zinc-500 mb-8 tracking-[0.3em] uppercase">M.O.G. Secure Protocol</p>
+            <h2 id="node-title" class="serif text-3xl gold-text mb-1 italic"></h2>
+            <p id="node-subtitle" class="text-[8px] text-zinc-500 mb-8 tracking-[0.3em] uppercase">Security Protocol Active</p>
             <div id="node-body" class="mb-8 text-zinc-400 text-[11px] leading-relaxed uppercase tracking-widest"></div>
             <div id="node-action-zone"></div>
         </div>
     </div>
 
     <script>
+        // SYSTEM CONFIG
         const SUPABASE_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
         const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
@@ -110,27 +112,31 @@
         const NODES = {
             identity: {
                 title: "Identity",
-                body: "Register your operative alias to link your profile to the broader command database.",
-                action: `<input type="text" id="alias-input" placeholder="ENTER ALIAS" class="w-full p-4 mb-4 text-[11px] tracking-widest uppercase outline-none">
-                         <button onclick="register()" id="reg-btn" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-widest">Establish Alias →</button>`
+                body: "Register your unique operative alias. This links your device to the M.O.G. command network.",
+                action: `<div id="reg-form">
+                            <input type="text" id="alias-input" placeholder="ENTER ALIAS" class="w-full p-4 mb-4 text-[11px] tracking-widest uppercase outline-none">
+                            <button onclick="processRegistration()" id="reg-btn" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-widest">Verify & Link →</button>
+                         </div>`
             },
             gallery: {
                 title: "Vault",
-                body: "Classified mission documentation and visual intelligence archives.",
+                body: "Classified archive of mission visual intelligence and documentation.",
                 action: `<button onclick="closeNode()" class="w-full py-4 border border-gold text-gold font-bold uppercase text-[10px] tracking-widest">Initialize Archive</button>`
             },
             crew: {
                 title: "Crew",
-                body: "Live operative status within the sector.",
-                action: `<div id="crew-list" class="mb-4 max-h-40 overflow-y-auto"></div><button onclick="loadCrew()" class="w-full py-2 text-[9px] text-gold/50 uppercase tracking-widest">Sync Signal</button>`
+                body: "Current operative signal status within this sector.",
+                action: `<div id="crew-list" class="mb-6 max-h-40 overflow-y-auto space-y-2"></div><button onclick="loadCrew()" class="w-full py-2 text-[8px] text-gold/50 uppercase tracking-[0.4em]">Refresh Signal</button>`
             },
             access: {
                 title: "Command",
-                body: "Authorized leadership clearance required.",
-                action: `<input type="password" id="cmd-key" placeholder="SECRET KEY" class="w-full p-4 mb-4 outline-none">
-                         <button onclick="auth()" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px]">Verify Clearance</button>`
+                body: "Director-level clearance required for interface override.",
+                action: `<input type="password" id="cmd-key" placeholder="SECURE KEY" class="w-full p-4 mb-4 outline-none">
+                         <button onclick="auth()" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px]">Authorize Entry</button>`
             }
         };
+
+        // --- CORE LOGIC ---
 
         async function init() {
             if (!supabase) return;
@@ -145,58 +151,86 @@
             document.getElementById('node-body').innerHTML = node.body;
             document.getElementById('node-action-zone').innerHTML = node.action;
             document.getElementById('node-modal').style.display = 'block';
-            if(id === 'identity') checkUserStatus();
+            
+            if(id === 'identity') checkStatus();
             if(id === 'crew') loadCrew();
         }
 
         function closeNode() { document.getElementById('node-modal').style.display = 'none'; }
 
-        async function checkUserStatus() {
+        // --- IDENTITY & REGISTRATION ---
+
+        async function checkStatus() {
             if (!currentUser) return;
             const { data: op } = await supabase.from('operatives').select('alias, id').eq('id', currentUser.id).single();
-            if (op) renderQR(op.alias, op.id);
+            if (op) renderPass(op.alias, op.id);
         }
 
-        async function register() {
+        async function processRegistration() {
             const alias = document.getElementById('alias-input').value.trim().toUpperCase();
-            if (!alias) return alert("ALIAS REQUIRED");
             const btn = document.getElementById('reg-btn');
-            btn.innerText = "UPLINKING...";
-            
+            if (alias.length < 3) return alert("ALIAS TOO SHORT");
+
+            btn.innerText = "AUTHENTICATING...";
+            btn.disabled = true;
+
             const { error } = await supabase.from('operatives').upsert([{ id: currentUser.id, alias: alias }]);
-            if (error) { alert("ERROR IN UPLINK"); btn.innerText = "TRY AGAIN"; }
-            else { renderQR(alias, currentUser.id); }
+
+            if (error) {
+                alert("ALIAS TAKEN OR SIGNAL LOST");
+                btn.innerText = "VERIFY & LINK →";
+                btn.disabled = false;
+            } else {
+                renderPass(alias, currentUser.id);
+            }
         }
 
-        function renderQR(alias, id) {
+        function renderPass(alias, id) {
             document.getElementById('node-body').innerHTML = `
-                <div class="text-center">
-                    <div id="qr-code" class="inline-block p-2 bg-white mb-4"></div>
-                    <div class="gold-text font-bold text-xl mb-1">${alias}</div>
-                    <div class="text-[8px] opacity-40">OPERATIVE ID: ${id}</div>
+                <div class="text-center animate-in fade-in zoom-in duration-500">
+                    <div id="qr-container" class="inline-block p-2 bg-white mb-6"></div>
+                    <div class="gold-text font-bold text-2xl tracking-tighter serif mb-1">${alias}</div>
+                    <div class="text-[7px] font-mono text-zinc-600 opacity-60">OPERATIVE_UID: ${id}</div>
                 </div>`;
-            document.getElementById('node-action-zone').innerHTML = `
-                <button onclick="downloadQR('${alias}')" class="w-full py-4 bg-white text-black font-black uppercase text-[10px] tracking-widest mb-2">Download Pass ↓</button>
-                <button onclick="closeNode()" class="w-full py-2 text-zinc-600 text-[9px] uppercase">Close Terminal</button>`;
             
-            new QRCode(document.getElementById("qr-code"), { text: id, width: 160, height: 160 });
+            document.getElementById('node-action-zone').innerHTML = `
+                <button onclick="downloadID('${alias}')" class="w-full py-4 bg-white text-black font-black uppercase text-[10px] tracking-widest mb-3 hover:bg-gold transition-colors">Download Access Pass ↓</button>
+                <button onclick="closeNode()" class="w-full py-2 text-zinc-600 text-[8px] uppercase tracking-[0.3em]">Exit Terminal</button>`;
+
+            new QRCode(document.getElementById("qr-container"), {
+                text: id,
+                width: 160,
+                height: 160,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
         }
 
-        function downloadQR(name) {
-            const img = document.querySelector('#qr-code img');
+        function downloadID(name) {
+            const img = document.querySelector('#qr-container img');
+            if(!img) return;
             const link = document.createElement('a');
-            link.download = `MOG_ID_${name}.png`;
+            link.download = `MOG_ACCESS_${name}.png`;
             link.href = img.src;
             link.click();
         }
 
+        // --- UTILITIES ---
+
         async function loadCrew() {
-            const { data } = await supabase.from('operatives').select('alias').limit(10);
-            if(data) document.getElementById('crew-list').innerHTML = data.map(o => `<div class="py-2 border-b border-white/5 text-[9px] uppercase tracking-widest">${o.alias} - <span class="text-cyan-500">ACTIVE</span></div>`).join('');
+            const { data } = await supabase.from('operatives').select('alias').limit(12);
+            if(data) {
+                document.getElementById('crew-list').innerHTML = data.map(o => `
+                    <div class="flex justify-between py-2 border-b border-white/5 text-[9px] uppercase tracking-widest">
+                        <span>${o.alias}</span>
+                        <span class="text-cyan-500 opacity-70">● ACTIVE</span>
+                    </div>`).join('');
+            }
         }
 
         function auth() {
-            if(document.getElementById('cmd-key').value === '7486') alert("CLEARANCE GRANTED");
+            if(document.getElementById('cmd-key').value === '7486') alert("COMMAND CLEARANCE GRANTED");
             else alert("ACCESS DENIED");
         }
     </script>
