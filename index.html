@@ -21,22 +21,21 @@
         .glass-tile:hover { border-color: var(--gold); transform: translateY(-5px); background: rgba(212, 175, 55, 0.05); }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; backdrop-filter: blur(10px); }
         .modal-content { background: #111; border: 1px solid var(--gold); max-width: 400px; width: 90%; margin: 15vh auto; padding: 2rem; border-radius: 4px; }
-        #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.8s; font-family: monospace; }
-        .terminal-text { color: var(--gold); font-size: 10px; margin-top: 10px; opacity: 0.7; }
+        #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 1.2s cubic-bezier(0.4, 0, 0.2, 1); font-family: monospace; }
+        .terminal-text { color: var(--gold); font-size: 10px; margin-top: 10px; opacity: 0.7; letter-spacing: 2px; }
         #video-bg { position: fixed; inset: 0; z-index: -10; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; filter: grayscale(100%); }
     </style>
 </head>
 <body>
 
     <div id="ritual-overlay">
-        <img src="logo.png" class="w-20 h-20 mb-4 animate-pulse">
+        <img src="logo.png" class="w-24 h-24 mb-4 animate-pulse">
         <div id="terminal-log" class="text-center">
             <div class="terminal-text">> INITIATING SOVEREIGN PROTOCOL...</div>
         </div>
     </div>
 
     <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
-    <audio id="mandateAudio" loop><source src="mandate_mix.mp3" type="audio/mpeg"></audio>
 
     <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
         <div class="serif text-2xl tracking-tighter gold-text" onclick="location.reload()">M.O.G.</div>
@@ -56,88 +55,57 @@
                 <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Identity</div>
             </div>
             <div onclick="openModal('gallery')" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Vault</div>
+                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Gallery</div>
             </div>
             <div onclick="openModal('crew')" class="glass-tile">
                 <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Crew</div>
             </div>
-            <div onclick="openModal('access')" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Command</div>
+            <div onclick="openModal('missions')" class="glass-tile">
+                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Missions</div>
             </div>
         </div>
     </main>
 
-    <div id="modal-identity" class="modal" onclick="closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h2 class="serif text-2xl gold-text mb-4 text-center">IDENTITY NODE</h2>
-            <div id="reg-form">
-                <input type="text" id="reg-name" placeholder="OPERATIVE ALIAS" class="w-full bg-black border border-gold/30 p-4 mb-4 text-white text-center outline-none focus:border-gold">
-                <button onclick="saveIdentity()" class="w-full py-4 bg-gold text-black font-bold uppercase text-[10px]">Establish Frequency</button>
-            </div>
-            <div id="passport" class="hidden text-center">
-                <div id="qrcode" class="inline-block p-2 bg-white mb-4"></div>
-                <p id="confirmed-alias" class="text-gold font-bold uppercase"></p>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-access" class="modal" onclick="closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h2 class="serif text-2xl gold-text mb-4 text-center">COMMAND</h2>
-            <input type="password" id="cmd-pass" placeholder="CLEARANCE CODE" class="w-full bg-black border border-gold/30 p-4 mb-4 text-white text-center outline-none">
-            <button onclick="checkAdmin()" class="w-full py-4 border border-gold text-gold font-bold uppercase text-[10px]">Authorize</button>
+    <div id="modal-template" class="modal" onclick="closeModal()">
+        <div class="modal-content text-left" onclick="event.stopPropagation()">
+            <h2 id="modal-title" class="serif text-2xl gold-text mb-2 uppercase"></h2>
+            <p id="modal-node" class="text-[9px] text-zinc-500 mb-6 tracking-widest uppercase">Access Node</p>
+            <div id="modal-body" class="text-zinc-400 text-[11px] space-y-3 mb-8"></div>
+            <button id="modal-action" class="w-full py-4 border border-gold/40 text-gold hover:bg-gold hover:text-black transition font-bold uppercase text-[9px] tracking-widest">Enter Node →</button>
         </div>
     </div>
 
     <script>
         const SUPABASE_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        let currentUser;
-
-        window.onload = async () => {
-            // Ritual Bypass Timer (Forces Dashboard after 2.5s)
-            setTimeout(() => {
-                const overlay = document.getElementById('ritual-overlay');
-                overlay.style.opacity = '0';
-                setTimeout(() => overlay.style.display = 'none', 800);
-            }, 2500);
-
-            try {
-                const { data } = await supabase.auth.signInAnonymously();
-                currentUser = data.user;
-                checkRegistration();
-            } catch (e) { console.warn("Sync delayed."); }
+        const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+        
+        const NODE_DATA = {
+            identity: { title: "Identity", capabilities: ["• Register unique operative code name", "• Link profile to command systems", "• Verify clearance credentials"] },
+            gallery: { title: "Gallery", capabilities: ["• View encrypted media archives", "• Upload mission evidence (Director access)", "• Review operational imagery"] },
+            crew: { title: "Crew", capabilities: ["• Monitor operative status", "• Receive live command broadcasts", "• AI-assisted message generation"] },
+            missions: { title: "Missions", capabilities: ["• Record mission outcomes", "• Review historical operations", "• AI-powered mission analysis"] }
         };
 
-        function openModal(id) { document.getElementById('modal-' + id).style.display = 'block'; }
-        function closeModal() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+        window.onload = () => {
+            // FORCE BYPASS: Hide overlay after 3s regardless of errors
+            setTimeout(() => {
+                const overlay = document.getElementById('ritual-overlay');
+                if(overlay) {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.style.display = 'none', 1200);
+                }
+            }, 3000);
+        };
 
-        async function saveIdentity() {
-            const alias = document.getElementById('reg-name').value;
-            if(!alias || !currentUser) return;
-            const { error } = await supabase.from('operatives').upsert([{ id: currentUser.id, alias }]);
-            if(!error) checkRegistration();
+        function openModal(id) {
+            const data = NODE_DATA[id];
+            document.getElementById('modal-title').innerText = data.title;
+            document.getElementById('modal-body').innerHTML = data.capabilities.map(c => `<div>${c}</div>`).join('');
+            document.getElementById('modal-template').style.display = 'block';
         }
 
-        async function checkRegistration() {
-            if(!currentUser) return;
-            const { data } = await supabase.from('operatives').select('alias').eq('id', currentUser.id).single();
-            if(data) {
-                document.getElementById('reg-form').classList.add('hidden');
-                document.getElementById('passport').classList.remove('hidden');
-                document.getElementById('confirmed-alias').innerText = data.alias;
-                document.getElementById('qrcode').innerHTML = "";
-                new QRCode(document.getElementById("qrcode"), { text: data.alias, width: 128, height: 128 });
-            }
-        }
-
-        function checkAdmin() {
-            if(document.getElementById('cmd-pass').value === '7486') {
-                alert("ACCESS GRANTED. COMMANDER STATUS ACTIVE.");
-                closeModal();
-            } else { alert("ACCESS DENIED."); }
-        }
+        function closeModal() { document.getElementById('modal-template').style.display = 'none'; }
     </script>
 </body>
 </html>
