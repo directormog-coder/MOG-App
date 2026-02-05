@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>ORIGIN 54 | DIRECTOR</title>
+    <title>M.O.G. | MANIFEST</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -15,59 +15,99 @@
         .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .glass-tile { background: var(--panel); border: 1px solid rgba(212, 175, 55, 0.1); transition: 0.3s; cursor: pointer; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .glass-tile:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); transform: translateY(-3px); }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 200; backdrop-filter: blur(45px); align-items: center; justify-content: center; opacity: 0; transition: 0.4s; overflow-y: auto; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 200; backdrop-filter: blur(45px); align-items: center; justify-content: center; opacity: 0; transition: 0.4s; }
         .modal.active { display: flex; opacity: 1; }
         .log-entry { border-left: 2px solid var(--gold); padding: 10px; margin-bottom: 12px; background: rgba(212,175,55,0.03); text-align: left; font-size: 10px; }
-        input, textarea, select { background: rgba(255,255,255,0.02) !important; border: 1px solid rgba(212,175,55,0.2) !important; color: #fff !important; padding: 12px; width: 100%; font-size: 10px; outline: none; margin-bottom: 8px; }
-        .director-border { border: 1px dashed var(--gold); }
-        .mgmt-table { width: 100%; font-size: 8px; border-collapse: collapse; margin-top: 10px; text-align: left; }
-        .mgmt-table th { color: var(--gold); border-bottom: 1px solid rgba(212,175,55,0.2); padding: 5px; }
-        .mgmt-table td { padding: 5px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        #neural-canvas { width: 100%; height: 120px; background: rgba(212, 175, 55, 0.02); border: 1px solid rgba(212, 175, 55, 0.1); position: relative; overflow: hidden; }
+        input, textarea { background: rgba(255,255,255,0.02) !important; border: 1px solid rgba(212,175,55,0.2) !important; color: #fff !important; padding: 12px; width: 100%; font-size: 10px; outline: none; }
+        .director-glow { text-shadow: 0 0 10px var(--gold); }
+        .director-tile { border: 1px double var(--gold) !important; box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.1); }
     </style>
 </head>
 <body id="terminal-body">
     <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
-        <div class="serif text-2xl gold-text cursor-pointer" onclick="location.reload()">ORIGIN 54</div>
+        <div class="serif text-2xl gold-text cursor-pointer" onclick="location.reload()">M.O.G.</div>
         <div id="auth-status" class="text-[7px] tracking-[0.5em] text-zinc-500 flex items-center gap-2 uppercase">
             GRID: <span id="online-count">1</span> | <span id="admin-status">INITIATING...</span> <div class="w-1.5 h-1.5 rounded-full bg-zinc-800" id="status-dot"></div>
         </div>
     </nav>
 
     <main class="relative z-10 pt-28 px-8 max-w-lg mx-auto text-center">
-        <h1 class="serif text-4xl gold-text mb-2 italic tracking-tighter">ASILI COLLECTIVE</h1>
-        <div class="grid grid-cols-2 gap-4 mt-8">
+        <h1 class="serif text-4xl gold-text mb-2 italic tracking-tighter">MANIFEST</h1>
+        <div id="neural-canvas" class="mb-6"><div id="constellation" class="w-full h-full relative"></div></div>
+        
+        <div class="grid grid-cols-2 gap-4" id="main-grid">
             <div onclick="UI.open('auth')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Identity</div></div>
-            <div onclick="UI.open('gallery')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Heritage Gallery</div></div>
-            <div onclick="UI.open('global')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Network Log</div></div>
-            <div id="director-node" onclick="UI.open('director')" class="glass-tile py-8 hidden director-border"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Director Console</div></div>
-        </div>
+            <div onclick="UI.open('files')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Binary Store</div></div>
+            <div onclick="UI.open('comms')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Transmit</div></div>
+            <div onclick="UI.open('global')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Global Log</div></div>
+            </div>
+
         <div class="mt-8 flex justify-between text-[7px] text-zinc-700 tracking-widest uppercase px-2">
-            <span onclick="System.decommission()" class="cursor-pointer hover:text-red-600">>> Disconnect</span>
-            <span>Ver. 5.5.0_Sovereign</span>
+            <span onclick="System.decommission()" class="cursor-pointer hover:text-red-600">>> Wipe Local</span>
+            <span>Ver. 5.4.0_Director_Console</span>
         </div>
     </main>
 
-    <div id="modal" class="modal"><div class="p-8 w-full max-w-md text-center"><h2 id="m-title" class="serif text-3xl gold-text mb-1 italic"></h2><div id="m-body" class="text-[9px] tracking-[0.4em] text-zinc-500 uppercase mb-8 border-b border-gold/10 pb-4"></div><div id="m-action-container" class="max-h-[400px] overflow-y-auto pr-2"></div><button onclick="UI.close()" class="mt-12 text-[8px] text-zinc-600 tracking-[0.5em] uppercase hover:text-white transition-all">Close Link</button></div></div>
+    <div id="modal" class="modal">
+        <div class="p-8 w-full max-w-md text-center">
+            <h2 id="m-title" class="serif text-3xl gold-text mb-1 italic"></h2>
+            <div id="m-body" class="text-[9px] tracking-[0.4em] text-zinc-500 uppercase mb-8 border-b border-gold/10 pb-4"></div>
+            <div id="m-action-container" class="max-h-[40vh] overflow-y-auto custom-scrollbar"></div>
+            <button onclick="UI.close()" class="mt-12 text-[8px] text-zinc-600 tracking-[0.5em] uppercase hover:text-white transition-all">Terminate Link</button>
+        </div>
+    </div>
 
     <script>
+        // --- CONFIGURATION ---
         const S_URL = 'YOUR_SUPABASE_URL';
         const S_KEY = 'YOUR_SUPABASE_ANON_KEY';
         const supabase = window.supabase.createClient(S_URL, S_KEY);
 
+        const Sound = {
+            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            play(f, d = 0.1, t = 'square') {
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                o.type = t; o.frequency.setValueAtTime(f, this.ctx.currentTime);
+                g.gain.setValueAtTime(0.01, this.ctx.currentTime);
+                o.connect(g); g.connect(this.ctx.destination);
+                o.start(); o.stop(this.ctx.currentTime + d);
+            }
+        };
+
         const UI = {
             open: (node) => {
+                Sound.play(600);
                 document.getElementById('modal').classList.add('active');
                 if(node === 'auth') Auth.check();
-                if(node === 'gallery') Gallery.load();
+                if(node === 'files') Files.load();
                 if(node === 'global') Global.load();
                 if(node === 'director') Director.load();
+                if(node === 'comms') UI.render("TRANSMIT", "Peer-to-Peer messaging coming soon.");
             },
-            close: () => document.getElementById('modal').classList.remove('active'),
+            close: () => { document.getElementById('modal').classList.remove('active'); Typer.stop(); },
             render: (t, b, a = "") => {
                 document.getElementById('m-title').innerText = t;
                 document.getElementById('m-body').innerHTML = b;
                 document.getElementById('m-action-container').innerHTML = a;
             }
+        };
+
+        const Typer = {
+            active: true,
+            async type(el, txt) {
+                this.active = true;
+                return new Promise(res => {
+                    let i = 0; el.innerHTML = "";
+                    const int = setInterval(() => {
+                        if (!this.active) { clearInterval(int); res(); return; }
+                        el.insertAdjacentHTML('beforeend', txt[i]); Sound.play(150, 0.05); i++;
+                        if (i >= txt.length) { clearInterval(int); res(); }
+                    }, 25);
+                });
+            },
+            stop() { this.active = false; }
         };
 
         const Auth = {
@@ -79,62 +119,75 @@
                 supabase.auth.onAuthStateChange(async (_, s) => {
                     Auth.user = s?.user || null;
                     if(Auth.user) {
-                        const { data: op } = await supabase.from('operatives').select('is_admin').eq('id', Auth.user.id).single();
-                        const isDir = Auth.user.email === 'director.mog@gmail.com';
-                        Auth.isAdmin = op?.is_admin || isDir;
+                        const { data: op } = await supabase.from('operatives').select('alias, is_admin').eq('id', Auth.user.id).single();
+                        
+                        // Check for Director credentials
+                        const isDirector = Auth.user.email === 'director.mog@gmail.com';
+                        Auth.isAdmin = op?.is_admin || isDirector;
 
-                        if (isDir) {
-                            document.getElementById('admin-status').innerHTML = "<span class='text-gold'>DIRECTOR_MODE</span>";
-                            document.getElementById('director-node').classList.remove('hidden');
+                        const statusEl = document.getElementById('admin-status');
+                        const dot = document.getElementById('status-dot');
+
+                        if (isDirector) {
+                            statusEl.innerHTML = "<span class='text-gold director-glow'>DIRECTOR_MODE</span>";
+                            dot.style.background = "#D4AF37";
+                            Director.injectPanel();
                         } else {
-                            document.getElementById('admin-status').innerText = Auth.isAdmin ? "ADMIN_ACCESS" : "OPERATIVE";
+                            statusEl.innerText = Auth.isAdmin ? "ADMIN_ACCESS" : "OPERATIVE";
+                            dot.style.background = Auth.isAdmin ? "#D4AF37" : "#22c55e";
                         }
+                        Network.heartbeat();
                     }
                 });
+            },
+            check: async () => {
+                const { data: op } = await supabase.from('operatives').select('*').eq('id', Auth.user.id).single();
+                if(op) {
+                    UI.render(op.alias, `UID: ${op.id}`, `<div id="qr" class="bg-white p-2 inline-block"></div>`);
+                    new QRCode(document.getElementById("qr"), { text: op.id, width: 140, height: 140 });
+                } else {
+                    UI.render("IDENTITY", "Register Alias", `<input id="a-in" placeholder="ALIAS"><button onclick="Auth.reg()" class="w-full bg-[#D4AF37] py-4 text-black font-black text-[10px] mt-2">REGISTER</button>`);
+                }
+            },
+            reg: async () => {
+                const alias = document.getElementById('a-in').value.toUpperCase();
+                if(alias) {
+                    await supabase.from('operatives').insert([{ id: Auth.user.id, alias }]);
+                    Auth.check();
+                }
             }
         };
 
         const Director = {
-            load: async () => {
-                UI.render("DIRECTOR CONSOLE", "Sovereign Management", `
-                    <div class="mb-6">
-                        <p class="text-gold text-[10px] font-bold mb-2">OPERATIVE REGISTRY</p>
-                        <div id="mgmt-list" class="overflow-x-auto">Loading Operatives...</div>
-                    </div>
-                    <div class="border-t border-gold/10 pt-4 text-left">
-                        <p class="text-gold text-[10px] font-bold mb-2">SYSTEM COMMANDS</p>
-                        <button onclick="Director.purge()" class="w-full bg-red-900/20 border border-red-900 text-red-600 py-3 text-[8px] uppercase">Wipe Global Log</button>
-                    </div>
-                `);
-                
-                // Fetching all operatives to show emails
-                const { data, error } = await supabase.from('operatives').select('*');
-                
-                if(data) {
-                    let table = `<table class="mgmt-table"><thead><tr><th>ALIAS</th><th>STATUS</th></tr></thead><tbody>`;
-                    data.forEach(op => {
-                        table += `<tr><td>${op.alias}</td><td>${op.is_admin ? 'ADMIN' : 'USER'}</td></tr>`;
-                    });
-                    table += `</tbody></table>`;
-                    document.getElementById('mgmt-list').innerHTML = table;
-                }
+            injectPanel: () => {
+                if(document.getElementById('dir-tile')) return;
+                const grid = document.getElementById('main-grid');
+                const tile = document.createElement('div');
+                tile.id = 'dir-tile';
+                tile.className = 'glass-tile py-8 col-span-2 director-tile';
+                tile.onclick = () => UI.open('director');
+                tile.innerHTML = `<div class="text-[9px] font-black text-gold uppercase tracking-[0.3em] director-glow">Director's Console</div>`;
+                grid.appendChild(tile);
             },
-            purge: async () => {
-                if(confirm("DELETE ALL BROADCASTS?")) {
-                    await supabase.from('global_log').delete().neq('content', 'ROOT');
-                    alert("Log Purged.");
-                    UI.close();
-                }
-            }
-        };
-
-        // Rest of the supporting modules (Gallery, Global, etc.) remain integrated
-        const Gallery = { load: async () => { /* Logic as before */ } };
-        const Global = { load: async () => { /* Logic as before */ } };
-        const AuthCheck = { check: async () => { /* Identity logic */ } };
+            load: async () => {
+                UI.render("DIRECTOR CONSOLE", "High-Level Operative Manifest", `<div id="d-list" class="space-y-2"></div>`);
+                const { data, error } = await supabase.from('operatives').select('alias, last_seen, id');
+                
+                // Note: For email visibility, your DB must have a mechanism to link 
+                // auth.users emails to this view, usually via a view or service role.
+                const list = document.getElementById('d-list');
+                if(data) {
+                    data.forEach(op => {
+                        const entry = document.createElement('div');
+                        entry.className = "log-entry border-gold/50";
+                        entry.innerHTML = `
+                            <div class="flex justify-between items-center">
+                                <span class="text-gold font-bold">${op.alias || 'UNREGISTERED'}</span>
+                                <span class="text-[8px] text-zinc-500">${new Date(op.last_seen).toLocaleDateString()}</span>
+                            </div>
+                            <div class="text-[8px] mt-1 text-zinc-400 opacity-60 lowercase tracking-normal">
+                                ID: ${op.id}
+                            </div>
+                        `;
+                        list.appendChild(
         
-        Auth.init();
-    </script>
-</body>
-    </html>
-    
