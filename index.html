@@ -18,6 +18,7 @@
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 200; backdrop-filter: blur(45px); align-items: center; justify-content: center; opacity: 0; transition: 0.4s; }
         .modal.active { display: flex; opacity: 1; }
         .log-entry { border-left: 2px solid var(--gold); padding: 10px; margin-bottom: 12px; background: rgba(212,175,55,0.03); text-align: left; font-size: 10px; }
+        .director-signal { border-left: 2px solid var(--gold); background: rgba(212, 175, 55, 0.15); color: var(--gold); font-weight: 900; text-shadow: 0 0 8px rgba(212, 175, 55, 0.5); }
         #neural-canvas { width: 100%; height: 120px; background: rgba(212, 175, 55, 0.02); border: 1px solid rgba(212, 175, 55, 0.1); position: relative; overflow: hidden; }
         input, textarea { background: rgba(255,255,255,0.02) !important; border: 1px solid rgba(212,175,55,0.2) !important; color: #fff !important; padding: 12px; width: 100%; font-size: 10px; outline: none; }
         .director-glow { text-shadow: 0 0 10px var(--gold); }
@@ -49,7 +50,7 @@
 
         <div class="mt-8 flex justify-between text-[7px] text-zinc-700 tracking-widest uppercase px-2">
             <span onclick="System.decommission()" class="cursor-pointer hover:text-red-600">>> Wipe Local</span>
-            <span>Ver. 5.5.0_Director_Purge</span>
+            <span>Ver. 5.6.0_Director_Signal</span>
         </div>
     </main>
 
@@ -164,7 +165,11 @@
                 grid.appendChild(tile);
             },
             load: async () => {
-                UI.render("DIRECTOR CONSOLE", "High-Level Operative Manifest", `<div id="d-list" class="space-y-2"></div>`);
+                UI.render("DIRECTOR CONSOLE", "Network Authority", `
+                    <textarea id="dir-signal-in" placeholder="EMIT DIRECTOR SIGNAL..." class="mb-2"></textarea>
+                    <button onclick="Director.broadcast()" class="w-full bg-gold text-black py-3 font-black text-[10px] mb-6 director-glow">BROADCAST SIGNAL</button>
+                    <div id="d-list" class="space-y-2"></div>
+                `);
                 const { data, error } = await supabase.from('director_manifest').select('*');
                 const list = document.getElementById('d-list');
                 if(data) {
@@ -185,16 +190,25 @@
                         `;
                         list.appendChild(entry);
                     });
-                } else {
-                    list.innerHTML = `<div class="text-red-500 text-[8px]">ENCRYPTED ACCESS ONLY: ${error?.message}</div>`;
+                }
+            },
+            broadcast: async () => {
+                const msg = document.getElementById('dir-signal-in').value;
+                if(msg && Auth.user) {
+                    await supabase.from('global_log').insert([{ 
+                        user_id: Auth.user.id, 
+                        content: msg.toUpperCase(), 
+                        is_director_signal: true 
+                    }]);
+                    document.getElementById('dir-signal-in').value = "";
+                    Sound.play(800, 0.3, 'sine');
                 }
             },
             purge: async (uid, alias) => {
                 if(confirm(`DECOMMISSION OPERATIVE [${alias}]? THIS ACTION IS IRREVERSIBLE.`)) {
                     Sound.play(200, 0.5, 'sawtooth');
-                    const { error } = await supabase.from('operatives').delete().eq('id', uid);
-                    if(!error) Director.load();
-                    else alert("PURGE FAILED: INSUFFICIENT CLEARANCE");
+                    await supabase.from('operatives').delete().eq('id', uid);
+                    Director.load();
                 }
             }
         };
@@ -228,9 +242,11 @@
                 const { data } = await supabase.from('global_log').select('*, from:operatives!user_id(alias)').order('created_at', { ascending: false }).limit(10);
                 const list = document.getElementById('g-list');
                 for (const g of (data || [])) {
-                    const el = document.createElement('div'); el.className = "log-entry";
+                    const el = document.createElement('div'); 
+                    el.className = g.is_director_signal ? "log-entry director-signal" : "log-entry";
                     list.appendChild(el);
-                    await Typer.type(el, `[${g.from?.alias || 'ANON'}] >> ${g.content}`);
+                    const prefix = g.is_director_signal ? "◈ [DIRECTOR] >> " : `[${g.from?.alias || 'ANON'}] >> `;
+                    await Typer.type(el, prefix + g.content);
                 }
             },
             post: async () => {
