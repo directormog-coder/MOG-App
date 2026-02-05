@@ -11,134 +11,266 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --gold: #D4AF37; --bg: #050505; --panel: #0a0a0a; }
-        body { background-color: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .serif { font-family: 'Cinzel', serif; }
-        .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .glass-tile { background: var(--panel); border: 1px solid rgba(255,255,255,0.05); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; aspect-ratio: 1/1; }
-        .glass-tile:hover { border-color: var(--gold); transform: translateY(-5px); background: rgba(212, 175, 55, 0.05); }
-        .glass-tile:active { transform: scale(0.95); }
+        :root { 
+            --gold: #D4AF37; 
+            --gold-bright: #f3cf5a;
+            --bg: #050505; 
+            --panel: rgba(15, 15, 15, 0.8); 
+        }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; backdrop-filter: blur(15px); }
-        .modal-content { background: #0c0c0c; border: 1px solid var(--gold); max-width: 450px; width: 92%; margin: 12vh auto; padding: 2.5rem; border-radius: 4px; position: relative; text-align: center; }
-        .close-btn { position: absolute; top: 1.5rem; right: 1.5rem; color: var(--gold); font-size: 20px; cursor: pointer; }
+        body { 
+            background-color: var(--bg); 
+            color: #fff; 
+            font-family: 'Inter', sans-serif; 
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .serif { font-family: 'Cinzel', serif; }
         
-        #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: fadeOut 1.2s ease 2.5s forwards; pointer-events: none; }
-        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-        #video-bg { position: fixed; inset: 0; z-index: -10; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; filter: grayscale(100%); }
-        
-        input { background: #000 !important; border: 1px solid rgba(212, 175, 55, 0.3) !important; color: #fff !important; text-align: center; padding: 14px; margin-bottom: 12px; width: 100%; outline: none; text-transform: uppercase; font-size: 12px; }
-        .btn-gold { background: var(--gold); color: #000; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; font-size: 10px; padding: 16px; width: 100%; margin-top: 8px; transition: 0.2s; }
-        .btn-gold:active { transform: scale(0.98); background: #fff; }
-        .btn-outline { border: 1px solid var(--gold); color: var(--gold); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 10px; padding: 16px; width: 100%; margin-top: 8px; transition: 0.2s; }
+        /* Smooth Gold Gradient Text */
+        .gold-text { 
+            background: linear-gradient(180deg, #fff 0%, var(--gold) 100%); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.3));
+        }
+
+        /* Improved Glassmorphism */
+        .glass-tile { 
+            background: var(--panel); 
+            border: 1px solid rgba(212, 175, 55, 0.1); 
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); 
+            cursor: pointer; 
+            border-radius: 2px; 
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-tile::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+            transition: 0.5s;
+        }
+
+        .glass-tile:hover::before { left: 100%; }
+
+        .glass-tile:hover { 
+            border-color: var(--gold); 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5), 0 0 15px rgba(212, 175, 55, 0.1);
+        }
+
+        /* Modal Polish */
+        .modal { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.9); 
+            z-index: 200; 
+            backdrop-filter: blur(20px); 
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal.active { display: flex; opacity: 1; align-items: center; justify-content: center; }
+
+        .modal-content { 
+            background: #080808; 
+            border: 1px solid rgba(212, 175, 55, 0.5); 
+            max-width: 400px; 
+            width: 90%; 
+            padding: 3rem 2rem; 
+            position: relative;
+        }
+
+        /* QR Code Container Styling */
+        #qrcode { 
+            padding: 10px; 
+            background: #fff; 
+            border-radius: 4px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+
+        input { 
+            background: rgba(255,255,255,0.03) !important; 
+            border: 1px solid rgba(212, 175, 55, 0.2) !important; 
+            color: #fff !important; 
+            text-align: center; 
+            padding: 16px; 
+            margin-bottom: 12px; 
+            width: 100%; 
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+        input:focus { border-color: var(--gold) !important; background: rgba(255,255,255,0.08) !important; }
+
+        .loading-shimmer {
+            animation: shimmer 2s infinite linear;
+            background: linear-gradient(to right, #D4AF37 0%, #fff 50%, #D4AF37 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes shimmer { to { background-position: 200% center; } }
     </style>
 </head>
 <body>
 
-    <div id="ritual-overlay">
-        <div class="text-[10px] tracking-[0.4em] text-gold uppercase opacity-60 font-mono">> INITIATING SOVEREIGN PROTOCOL...</div>
+    <div id="ritual-overlay" class="fixed inset-0 bg-black z-[999] flex flex-col justify-center align-center items-center pointer-events-none transition-opacity duration-1000">
+        <div class="text-[10px] tracking-[0.5em] text-gold uppercase opacity-60 font-mono animate-pulse">> ESTABLISHING SECURE CONNECTION...</div>
     </div>
 
-    <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
+    <video id="video-bg" class="fixed inset-0 z-[-1] w-full h-full object-cover opacity-20 grayscale" autoplay muted loop playsinline>
+        <source src="1000211769.mp4" type="video/mp4">
+    </video>
 
-    <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
-        <div class="serif text-2xl gold-text tracking-tighter cursor-pointer" onclick="location.reload()">M.O.G.</div>
-        <div class="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_10px_cyan]"></div>
+    <nav class="fixed top-0 w-full p-6 flex justify-between items-center z-50">
+        <div class="serif text-xl gold-text tracking-widest cursor-pointer hover:opacity-80" onclick="location.reload()">M.O.G.</div>
+        <div id="status-indicator" class="flex items-center gap-2">
+            <span class="text-[8px] text-zinc-500 uppercase tracking-widest">System Live</span>
+            <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></div>
+        </div>
     </nav>
 
-    <main class="relative z-10 pt-28 px-8 max-w-lg mx-auto text-center h-screen">
-        <img src="logo.png" class="w-24 h-24 mx-auto mb-6 border border-gold/10 rounded-full shadow-2xl">
-        <h1 class="serif text-5xl gold-text mb-1 italic">MANIFEST</h1>
-        <p class="text-[9px] tracking-[0.4em] text-zinc-500 mb-12 uppercase">Access Terminal</p>
+    <main class="relative z-10 pt-32 px-6 max-w-md mx-auto text-center">
+        <div class="relative inline-block mb-8">
+            <div class="absolute inset-0 rounded-full border border-gold/20 animate-ping"></div>
+            <img src="logo.png" class="w-20 h-20 rounded-full border border-gold/30 shadow-2xl relative z-10">
+        </div>
+        
+        <h1 class="serif text-6xl gold-text mb-2 italic">MANIFEST</h1>
+        <p class="text-[9px] tracking-[0.6em] text-zinc-500 mb-12 uppercase font-light">Sovereign Identity Protocol</p>
 
-        <div class="grid grid-cols-2 gap-5">
-            <div onclick="openNode('auth')" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Access Node</div>
+        <div class="grid grid-cols-2 gap-4">
+            <div onclick="openNode('auth')" class="glass-tile py-8">
+                <div class="text-[9px] tracking-[0.3em] uppercase font-bold text-gold">Access Node</div>
             </div>
-            <div onclick="openNode('vault')" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Vault</div>
+            <div onclick="openNode('vault')" class="glass-tile py-8">
+                <div class="text-[9px] tracking-[0.3em] uppercase font-bold text-zinc-500">Vault</div>
             </div>
-            <div onclick="openNode('crew')" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Crew</div>
+            <div onclick="openNode('crew')" class="glass-tile py-8">
+                <div class="text-[9px] tracking-[0.3em] uppercase font-bold text-zinc-500">Crew</div>
             </div>
-            <div onclick="openNode('command')" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Command</div>
+            <div onclick="openNode('command')" class="glass-tile py-8">
+                <div class="text-[9px] tracking-[0.3em] uppercase font-bold text-zinc-500">Command</div>
             </div>
         </div>
     </main>
 
-    <div id="node-modal" class="modal">
+    <div id="node-modal" class="modal" onclick="if(event.target === this) closeNode()">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeNode()">&times;</span>
-            <h2 id="modal-title" class="serif text-3xl gold-text mb-2 italic"></h2>
-            <div id="modal-body" class="mb-6 text-zinc-400 text-[10px] uppercase tracking-widest"></div>
-            <div id="modal-action"></div>
+            <span class="close-btn absolute top-6 right-8 text-zinc-600 hover:text-gold cursor-pointer text-2xl" onclick="closeNode()">&times;</span>
+            <h2 id="modal-title" class="serif text-2xl gold-text mb-4 italic"></h2>
+            <div id="modal-body" class="mb-6 text-zinc-400 text-[10px] uppercase tracking-widest leading-relaxed"></div>
+            <div id="modal-action" class="flex flex-col gap-2"></div>
         </div>
     </div>
 
     <script>
-        const S_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
-        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
-        const supabase = window.supabase.createClient(S_URL, S_KEY);
+        // Configuration
+        const CONFIG = {
+            S_URL: 'https://nwaridsuoqxdunfimele.supabase.co',
+            S_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE'
+        };
+
+        const supabase = window.supabase.createClient(CONFIG.S_URL, CONFIG.S_KEY);
         let currentUser = null;
 
-        async function init() {
-            const { data } = await supabase.auth.signInAnonymously();
+        // Initialization
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('ritual-overlay').style.opacity = '0';
+            }, 2000);
+            initSession();
+        });
+
+        async function initSession() {
+            const { data, error } = await supabase.auth.signInAnonymously();
+            if (error) console.error("Auth Error:", error);
             currentUser = data.user;
         }
-        init();
 
+        // Modal Logic
         function openNode(id) {
             const modal = document.getElementById('node-modal');
             const title = document.getElementById('modal-title');
             const body = document.getElementById('modal-body');
             const action = document.getElementById('modal-action');
 
-            modal.style.display = 'block';
+            modal.classList.add('active');
 
             if (id === 'auth') {
-                title.innerText = "ACCESS NODE";
+                title.innerText = "IDENTITY VERIFICATION";
+                body.innerHTML = "<span class='loading-shimmer'>Scanning database...</span>";
+                action.innerHTML = "";
                 checkMemberStatus();
             } else {
                 title.innerText = id.toUpperCase();
-                body.innerText = "Access Restricted.";
-                action.innerHTML = "";
+                body.innerText = "Level 2 clearance required. Node currently encrypted.";
+                action.innerHTML = `<button onclick="closeNode()" class="border border-zinc-800 text-zinc-500 py-4 text-[10px] tracking-widest hover:bg-zinc-900">RETURN</button>`;
             }
         }
 
-        function closeNode() { document.getElementById('node-modal').style.display = 'none'; }
+        function closeNode() { 
+            document.getElementById('node-modal').classList.remove('active'); 
+        }
 
+        // Auth Logic
         async function checkMemberStatus() {
-            const { data: op } = await supabase.from('operatives').select('*').eq('id', currentUser.id).single();
-            if (op) {
-                renderID(op.alias, op.id);
-            } else {
+            try {
+                const { data: op, error } = await supabase.from('operatives').select('*').eq('id', currentUser.id).single();
+                if (op) {
+                    renderID(op.alias, op.id);
+                } else {
+                    showPortal();
+                }
+            } catch (e) {
                 showPortal();
             }
         }
 
         function showPortal() {
-            document.getElementById('modal-body').innerText = "Identify yourself to the network";
+            document.getElementById('modal-body').innerText = "Submit your alias to the manifest";
             document.getElementById('modal-action').innerHTML = `
-                <input type="text" id="alias-input" placeholder="OPERATIVE ALIAS">
-                <button onclick="handleAuth('REGISTER')" class="btn-gold">Register New Identity</button>
-                <button onclick="handleAuth('LOGIN')" class="btn-outline">Login Existing Alias</button>
+                <input type="text" id="alias-input" placeholder="OPERATIVE ALIAS" maxlength="15">
+                <button onclick="handleAuth('REGISTER')" class="bg-[#D4AF37] text-black font-black py-4 text-[10px] tracking-[0.2em] hover:bg-white transition-colors">INITIATE REGISTRATION</button>
+                <button onclick="handleAuth('LOGIN')" class="border border-[#D4AF37] text-[#D4AF37] py-4 text-[10px] tracking-[0.2em] hover:bg-[#D4AF37] hover:text-black transition-all">RECALL IDENTITY</button>
             `;
         }
 
         async function handleAuth(mode) {
-            const alias = document.getElementById('alias-input').value.trim().toUpperCase();
-            if (!alias) return alert("ALIAS REQUIRED");
+            const aliasInput = document.getElementById('alias-input');
+            const alias = aliasInput.value.trim().toUpperCase();
+            
+            if (!alias || alias.length < 3) return alert("ALIAS TOO SHORT (MIN 3)");
+
+            const btn = event.target;
+            btn.innerText = "PROCESSING...";
+            btn.disabled = true;
 
             const { data: existing } = await supabase.from('operatives').select('*').eq('alias', alias).single();
 
             if (mode === 'REGISTER') {
-                if (existing) return alert("ALIAS ALREADY RESERVED");
+                if (existing) {
+                    alert("ALIAS UNAVAILABLE");
+                    btn.innerText = "INITIATE REGISTRATION";
+                    btn.disabled = false;
+                    return;
+                }
                 const { error } = await supabase.from('operatives').insert([{ id: currentUser.id, alias: alias }]);
                 if (!error) renderID(alias, currentUser.id);
             } else {
-                if (!existing) return alert("ALIAS NOT FOUND");
+                if (!existing) {
+                    alert("IDENTITY UNKNOWN");
+                    btn.innerText = "RECALL IDENTITY";
+                    btn.disabled = false;
+                    return;
+                }
+                // Update the current anonymous user ID to the found record
                 await supabase.from('operatives').update({ id: currentUser.id }).eq('alias', alias);
                 renderID(existing.alias, existing.id);
             }
@@ -146,27 +278,39 @@
 
         function renderID(name, id) {
             document.getElementById('modal-body').innerHTML = `
-                <div id="qrcode" class="mb-6 p-2 bg-white inline-block"></div>
-                <div class="gold-text text-3xl font-bold italic mb-1">${name}</div>
-                <div class="text-[8px] opacity-40">UID: ${id}</div>
+                <div class="flex justify-center mb-6">
+                    <div id="qrcode"></div>
+                </div>
+                <div class="gold-text text-3xl font-bold italic mb-1 tracking-tighter">${name}</div>
+                <div class="text-[7px] opacity-30 font-mono tracking-widest">SECURE_TOKEN: ${id}</div>
             `;
+            
             document.getElementById('modal-action').innerHTML = `
-                <button onclick="downloadPass('${name}')" class="btn-gold" style="background:white; color:black;">Download Access Pass ↓</button>
-                <button onclick="logout()" class="text-[8px] text-zinc-600 uppercase mt-8 tracking-widest">Disconnect Identity</button>
+                <button onclick="downloadPass('${name}')" class="bg-white text-black font-bold py-4 text-[10px] tracking-widest hover:bg-gold transition-colors">DOWNLOAD CLEARANCE PASS</button>
+                <button onclick="logout()" class="text-[8px] text-zinc-600 uppercase mt-4 tracking-[0.3em] hover:text-red-900 transition-colors">Terminate Session</button>
             `;
-            document.getElementById('qrcode').innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), { text: id, width: 140, height: 140 });
+
+            new QRCode(document.getElementById("qrcode"), { 
+                text: id, 
+                width: 140, 
+                height: 140,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
         }
 
         function downloadPass(name) {
-            const img = document.querySelector('#qrcode img');
+            const canvas = document.querySelector('#qrcode canvas');
             const link = document.createElement('a');
             link.download = `MOG_ID_${name}.png`;
-            link.href = img.src;
+            link.href = canvas.toDataURL("image/png");
             link.click();
         }
 
-        function logout() { location.reload(); }
+        function logout() { 
+            if(confirm("TERMINATE SESSION?")) location.reload(); 
+        }
     </script>
 </body>
 </html>
