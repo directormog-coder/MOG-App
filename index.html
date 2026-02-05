@@ -10,72 +10,108 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;900&display=swap" rel="stylesheet">
     <style>
         :root { --gold: #D4AF37; --bg: #050505; --panel: #0a0a0a; --red: #ff4444; }
-        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
+        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; margin: 0; }
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .glass-tile { background: var(--panel); border: 1px solid rgba(212, 175, 55, 0.1); transition: 0.3s; cursor: pointer; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .glass-tile:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); transform: translateY(-3px); }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 200; backdrop-filter: blur(45px); align-items: center; justify-content: center; opacity: 0; transition: 0.4s; }
+        
+        /* Interactive Tiles */
+        .glass-tile { 
+            background: var(--panel); 
+            border: 1px solid rgba(212, 175, 55, 0.1); 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            cursor: pointer; 
+            border-radius: 4px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .glass-tile:active { transform: scale(0.95); background: rgba(212, 175, 55, 0.1); }
+        .glass-tile:hover { border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.1); }
+        
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 200; backdrop-filter: blur(45px); align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
         .modal.active { display: flex; opacity: 1; }
+        
         .log-entry { border-left: 2px solid var(--gold); padding: 10px; margin-bottom: 12px; background: rgba(212,175,55,0.03); text-align: left; font-size: 10px; }
-        .director-signal { border-left: 2px solid var(--gold); background: rgba(212, 175, 55, 0.15); color: var(--gold); font-weight: 900; text-shadow: 0 0 8px rgba(212, 175, 55, 0.5); }
-        .lockdown-ui { border-color: var(--red) !important; color: var(--red) !important; }
-        input, textarea { background: rgba(255,255,255,0.02) !important; border: 1px solid rgba(212,175,55,0.2) !important; color: #fff !important; padding: 12px; width: 100%; font-size: 10px; outline: none; }
-        .director-glow { text-shadow: 0 0 10px var(--gold); }
-        .director-tile { border: 1px double var(--gold) !important; box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.1); }
-        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--gold); }
-        .purge-btn:hover { color: var(--red); text-shadow: 0 0 8px var(--red); }
+        #neural-canvas { width: 100%; height: 120px; background: rgba(212, 175, 55, 0.02); border: 1px solid rgba(212, 175, 55, 0.1); position: relative; }
+        
+        input, textarea { background: rgba(255,255,255,0.02) !important; border: 1px solid rgba(212,175,55,0.2) !important; color: #fff !important; padding: 12px; width: 100%; font-size: 10px; outline: none; border-radius: 0; }
+        .director-tile { border: 1px double var(--gold) !important; }
     </style>
 </head>
-<body id="terminal-body">
+<body>
     <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
         <div class="serif text-2xl gold-text cursor-pointer" onclick="location.reload()">M.O.G.</div>
         <div id="auth-status" class="text-[7px] tracking-[0.5em] text-zinc-500 flex items-center gap-2 uppercase">
-            GRID: <span id="online-count">1</span> | <span id="admin-status">INITIATING...</span> <div class="w-1.5 h-1.5 rounded-full bg-zinc-800" id="status-dot"></div>
+            GRID: <span id="online-count">1</span> | <span id="admin-status">OFFLINE</span> <div class="w-1.5 h-1.5 rounded-full bg-zinc-800" id="status-dot"></div>
         </div>
     </nav>
 
     <main class="relative z-10 pt-28 px-8 max-w-lg mx-auto text-center">
         <h1 class="serif text-4xl gold-text mb-2 italic tracking-tighter">MANIFEST</h1>
-        <div id="neural-canvas" class="mb-6"><div id="constellation" class="w-full h-full relative"></div></div>
+        <div id="neural-canvas" class="mb-6"></div>
         
         <div class="grid grid-cols-2 gap-4" id="main-grid">
-            <div onclick="UI.open('auth')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Identity</div></div>
-            <div onclick="UI.open('files')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Binary Store</div></div>
-            <div onclick="UI.open('comms')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Transmit</div></div>
-            <div onclick="UI.open('global')" class="glass-tile py-8"><div class="text-[9px] font-black text-gold uppercase tracking-widest">Global Log</div></div>
+            <div onclick="UI.open('auth')" class="glass-tile py-10">
+                <div class="text-[9px] font-black text-gold uppercase tracking-widest pointer-events-none">Identity</div>
+            </div>
+            <div onclick="UI.open('files')" class="glass-tile py-10">
+                <div class="text-[9px] font-black text-gold uppercase tracking-widest pointer-events-none">Binary Store</div>
+            </div>
+            <div onclick="UI.open('comms')" class="glass-tile py-10">
+                <div class="text-[9px] font-black text-gold uppercase tracking-widest pointer-events-none">Transmit</div>
+            </div>
+            <div onclick="UI.open('global')" class="glass-tile py-10">
+                <div class="text-[9px] font-black text-gold uppercase tracking-widest pointer-events-none">Global Log</div>
+            </div>
         </div>
 
         <div class="mt-8 flex justify-between text-[7px] text-zinc-700 tracking-widest uppercase px-2">
             <span onclick="System.decommission()" class="cursor-pointer hover:text-red-600">>> Wipe Local</span>
-            <span>Ver. 5.7.0_Grid_Lockdown</span>
+            <span>Ver. 5.8.0_Hotfix</span>
         </div>
     </main>
 
-    <div id="modal" class="modal"><div class="p-8 w-full max-w-md text-center"><h2 id="m-title" class="serif text-3xl gold-text mb-1 italic"></h2><div id="m-body" class="text-[9px] tracking-[0.4em] text-zinc-500 uppercase mb-8 border-b border-gold/10 pb-4"></div><div id="m-action-container" class="max-h-[40vh] overflow-y-auto custom-scrollbar"></div><button onclick="UI.close()" class="mt-12 text-[8px] text-zinc-600 tracking-[0.5em] uppercase hover:text-white transition-all">Terminate Link</button></div></div>
+    <div id="modal" class="modal">
+        <div class="p-8 w-full max-w-md text-center">
+            <h2 id="m-title" class="serif text-3xl gold-text mb-1 italic"></h2>
+            <div id="m-body" class="text-[9px] tracking-[0.4em] text-zinc-500 uppercase mb-8 border-b border-gold/10 pb-4"></div>
+            <div id="m-action-container"></div>
+            <button onclick="UI.close()" class="mt-12 text-[8px] text-zinc-600 tracking-[0.5em] uppercase hover:text-white transition-all">Terminate Link</button>
+        </div>
+    </div>
 
     <script>
+        // --- CORE INITIALIZATION ---
         const S_URL = 'YOUR_SUPABASE_URL';
         const S_KEY = 'YOUR_SUPABASE_ANON_KEY';
-        const supabase = window.supabase.createClient(S_URL, S_KEY);
+        let supabase;
+
+        try {
+            supabase = window.supabase.createClient(S_URL, S_KEY);
+            console.log("System: Supabase Linked.");
+        } catch(e) { console.error("System: Connection Failed.", e); }
 
         const Sound = {
-            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            ctx: null,
+            init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
             play(f, d = 0.1, t = 'square') {
+                this.init();
                 if (this.ctx.state === 'suspended') this.ctx.resume();
                 const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
                 o.type = t; o.frequency.setValueAtTime(f, this.ctx.currentTime);
-                g.gain.setValueAtTime(0.01, this.ctx.currentTime);
+                g.gain.setValueAtTime(0.02, this.ctx.currentTime);
                 o.connect(g); g.connect(this.ctx.destination);
                 o.start(); o.stop(this.ctx.currentTime + d);
             }
         };
 
         const UI = {
-            isLockdown: false,
             open: (node) => {
-                Sound.play(600);
+                console.log(`UI: Opening ${node}`);
+                Sound.play(400);
                 document.getElementById('modal').classList.add('active');
                 if(node === 'auth') Auth.check();
                 if(node === 'files') Files.load();
@@ -83,7 +119,7 @@
                 if(node === 'director') Director.load();
                 if(node === 'comms') UI.render("TRANSMIT", "Peer-to-Peer messaging coming soon.");
             },
-            close: () => { document.getElementById('modal').classList.remove('active'); Typer.stop(); },
+            close: () => { document.getElementById('modal').classList.remove('active'); },
             render: (t, b, a = "") => {
                 document.getElementById('m-title').innerText = t;
                 document.getElementById('m-body').innerHTML = b;
@@ -91,49 +127,38 @@
             }
         };
 
-        const Typer = {
-            active: true,
-            async type(el, txt) {
-                this.active = true;
-                return new Promise(res => {
-                    let i = 0; el.innerHTML = "";
-                    const int = setInterval(() => {
-                        if (!this.active) { clearInterval(int); res(); return; }
-                        el.insertAdjacentHTML('beforeend', txt[i]); Sound.play(150, 0.05); i++;
-                        if (i >= txt.length) { clearInterval(int); res(); }
-                    }, 25);
-                });
-            },
-            stop() { this.active = false; }
-        };
-
         const Auth = {
-            user: null, isAdmin: false,
+            user: null,
             init: async () => {
                 const { data } = await supabase.auth.getSession();
                 if(!data.session) await supabase.auth.signInAnonymously();
                 
                 supabase.auth.onAuthStateChange(async (_, s) => {
-                    Auth.user = s?.user || null;
+                    Auth.user = s?.user;
                     if(Auth.user) {
-                        const { data: op } = await supabase.from('operatives').select('alias, is_admin').eq('id', Auth.user.id).single();
+                        console.log("Auth: Active Session.");
                         const isDirector = Auth.user.email === 'director.mog@gmail.com';
-                        Auth.isAdmin = op?.is_admin || isDirector;
-
-                        const statusEl = document.getElementById('admin-status');
-                        const dot = document.getElementById('status-dot');
-
-                        if (isDirector) {
-                            statusEl.innerHTML = "<span class='text-gold director-glow'>DIRECTOR_MODE</span>";
-                            dot.style.background = "#D4AF37";
-                            Director.injectPanel();
-                        } else {
-                            statusEl.innerText = Auth.isAdmin ? "ADMIN_ACCESS" : "OPERATIVE";
-                            dot.style.background = Auth.isAdmin ? "#D4AF37" : "#22c55e";
-                        }
-                        Network.heartbeat();
+                        document.getElementById('admin-status').innerText = isDirector ? "DIRECTOR" : "OPERATIVE";
+                        document.getElementById('status-dot').style.background = isDirector ? "#D4AF37" : "#22c55e";
+                        if(isDirector) Director.injectPanel();
                     }
                 });
+            },
+            check: async () => {
+                UI.render("IDENTITY", "Accessing Records...");
+                const { data } = await supabase.from('operatives').select('*').eq('id', Auth.user.id).single();
+                if(data) {
+                    UI.render(data.alias, `UID: ${data.id}`);
+                } else {
+                    UI.render("IDENTITY", "Register Alias", `<input id="a-in" placeholder="ALIAS"><button onclick="Auth.reg()" class="w-full bg-[#D4AF37] py-4 text-black font-black text-[10px] mt-2">REGISTER</button>`);
+                }
+            },
+            reg: async () => {
+                const alias = document.getElementById('a-in').value.toUpperCase();
+                if(alias) {
+                    await supabase.from('operatives').insert([{ id: Auth.user.id, alias }]);
+                    Auth.check();
+                }
             }
         };
 
@@ -142,112 +167,37 @@
                 if(document.getElementById('dir-tile')) return;
                 const grid = document.getElementById('main-grid');
                 const tile = document.createElement('div');
-                tile.id = 'dir-tile'; tile.className = 'glass-tile py-8 col-span-2 director-tile';
+                tile.id = 'dir-tile';
+                tile.className = 'glass-tile py-10 col-span-2 director-tile';
                 tile.onclick = () => UI.open('director');
-                tile.innerHTML = `<div class="text-[9px] font-black text-gold uppercase tracking-[0.3em] director-glow">Director's Console</div>`;
+                tile.innerHTML = `<div class="text-[9px] font-black text-gold uppercase tracking-[0.3em]">Director Console</div>`;
                 grid.appendChild(tile);
             },
             load: async () => {
-                const { data: config } = await supabase.from('system_config').select('lockdown_active').single();
-                UI.isLockdown = config.lockdown_active;
-
-                UI.render("DIRECTOR CONSOLE", "Network Authority", `
-                    <div class="mb-4 flex flex-col gap-2">
-                        <button onclick="Director.toggleLockdown()" class="w-full py-3 text-[10px] font-black border ${UI.isLockdown ? 'border-red-600 text-red-600' : 'border-gold text-gold opacity-50'}">
-                            ${UI.isLockdown ? 'TERMINATE LOCKDOWN' : 'INITIATE GRID LOCKDOWN'}
-                        </button>
-                        <textarea id="dir-signal-in" placeholder="EMIT DIRECTOR SIGNAL..." class="mt-4"></textarea>
-                        <button onclick="Director.broadcast()" class="w-full bg-gold text-black py-3 font-black text-[10px] director-glow">BROADCAST SIGNAL</button>
-                    </div>
-                    <div id="d-list" class="space-y-2"></div>
-                `);
-                const { data } = await supabase.from('director_manifest').select('*');
-                const list = document.getElementById('d-list');
-                if(data) {
-                    data.forEach(op => {
-                        const entry = document.createElement('div');
-                        entry.className = "log-entry border-gold/50 flex justify-between items-center";
-                        entry.innerHTML = `<div><span class="text-gold font-bold">${op.alias || 'UNREGISTERED'}</span><br><span class="text-[7px] text-zinc-500 uppercase italic tracking-tighter">${op.email}</span></div>
-                        <button onclick="Director.purge('${op.id}', '${op.alias}')" class="purge-btn text-[10px] font-black px-2">✕</button>`;
-                        list.appendChild(entry);
-                    });
-                }
-            },
-            toggleLockdown: async () => {
-                const newState = !UI.isLockdown;
-                await supabase.from('system_config').update({ lockdown_active: newState }).eq('id', 'network_status');
-                Sound.play(newState ? 100 : 400, 0.5, 'sawtooth');
-                Director.load();
-            },
-            broadcast: async () => {
-                const msg = document.getElementById('dir-signal-in').value;
-                if(msg && Auth.user) {
-                    await supabase.from('global_log').insert([{ user_id: Auth.user.id, content: msg.toUpperCase(), is_director_signal: true }]);
-                    document.getElementById('dir-signal-in').value = ""; Sound.play(800, 0.3);
-                }
-            },
-            purge: async (uid, alias) => {
-                if(confirm(`DECOMMISSION [${alias}]?`)) { await supabase.from('operatives').delete().eq('id', uid); Director.load(); }
+                UI.render("DIRECTOR", "Manifest Access");
+                // Simplified list for testing responsiveness
+                UI.render("DIRECTOR", "Manifest", "<div class='text-zinc-500'>Querying Grid...</div>");
             }
         };
 
         const Global = {
-            load: async () => {
-                const { data: config } = await supabase.from('system_config').select('lockdown_active').single();
-                UI.isLockdown = config.lockdown_active;
-
-                const lockMsg = UI.isLockdown ? `<div class="text-red-600 font-black mb-2 animate-pulse">[ GRID UNDER LOCKDOWN - BROADCAST DISABLED ]</div>` : "";
-                const btnStyle = (UI.isLockdown && !Auth.isAdmin) ? "opacity-20 pointer-events-none" : "bg-gold";
-
-                UI.render("GLOBAL LOG", "Network Broadcast", `
-                    ${lockMsg}
-                    <div id="g-list" class="mb-4 max-h-[200px] overflow-y-auto custom-scrollbar"></div>
-                    <textarea id="g-in" placeholder="EMIT SIGNAL..."></textarea>
-                    <button id="g-btn" onclick="Global.post()" class="w-full ${btnStyle} text-black py-4 font-black text-[10px] mt-2">BROADCAST</button>
-                `);
-
-                const { data } = await supabase.from('global_log').select('*, from:operatives!user_id(alias)').order('created_at', { ascending: false }).limit(10);
-                const list = document.getElementById('g-list');
-                for (const g of (data || [])) {
-                    const el = document.createElement('div');
-                    el.className = g.is_director_signal ? "log-entry director-signal" : "log-entry";
-                    list.appendChild(el);
-                    const prefix = g.is_director_signal ? "◈ [DIRECTOR] >> " : `[${g.from?.alias || 'ANON'}] >> `;
-                    await Typer.type(el, prefix + g.content);
-                }
-            },
-            post: async () => {
-                if(UI.isLockdown && !Auth.isAdmin) return;
-                const content = document.getElementById('g-in').value;
-                if(content && Auth.user) {
-                    await supabase.from('global_log').insert([{ user_id: Auth.user.id, content }]);
-                    document.getElementById('g-in').value = ""; Global.load();
-                }
-            }
-        };
-
-        const Network = {
-            heartbeat: async () => {
-                if(Auth.user) await supabase.from('operatives').update({ last_seen: new Date().toISOString() }).eq('id', Auth.user.id);
-                const { count } = await supabase.from('operatives').select('*', { count: 'exact', head: true }).gt('last_seen', new Date(Date.now() - 300000).toISOString());
-                document.getElementById('online-count').innerText = count || 1;
-            }
+            load: () => UI.render("GLOBAL LOG", "Network Signal", "<div class='log-entry'>Testing Signal...</div>")
         };
 
         const Files = {
-            load: async () => {
-                UI.render("BINARY STORE", "Vault", `<div id="file-list" class="mb-4 space-y-2"></div><input type="file" id="file-in" class="hidden" onchange="Files.upload()"><button onclick="document.getElementById('file-in').click()" class="w-full border border-gold text-gold py-4 text-[9px] font-bold">UPLOAD</button>`);
-                const { data } = await supabase.storage.from('manifest-store').list(Auth.user.id);
-                document.getElementById('file-list').innerHTML = data?.map(f => `<div class="log-entry flex justify-between"><span>${f.name}</span> <a href="${S_URL}/storage/v1/object/public/manifest-store/${Auth.user.id}/${f.name}" target="_blank" class="text-gold">OPEN</a></div>`).join('') || "NO DATA";
-            }
+            load: () => UI.render("BINARY STORE", "Vault", "<div class='text-zinc-500'>No Data Packages.</div>")
         };
 
         const System = {
-            decommission: async () => { if(confirm("TERMINATE CONNECTION?")) { await supabase.auth.signOut(); location.reload(); } }
+            decommission: async () => { if(confirm("Wipe Connection?")) { await supabase.auth.signOut(); location.reload(); } }
         };
 
+        // Start Auth
         Auth.init();
+        
+        // Browser Audio Wakeup
+        window.addEventListener('touchstart', () => Sound.init(), {once: true});
+        window.addEventListener('click', () => Sound.init(), {once: true});
     </script>
 </body>
-    </html>
-    
+</html>
