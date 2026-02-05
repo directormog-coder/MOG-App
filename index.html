@@ -1,206 +1,139 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>M.O.G. | MANIFEST</title>
+<style>
+    :root { --gold: #D4AF37; --bg: #050505; --panel: #0a0a0a; --glint: rgba(212, 175, 55, 0.4); }
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    /* Responsive Tile Logic */
+    .glass-tile { 
+        background: var(--panel); 
+        border: 1px solid rgba(255,255,255,0.05); 
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); 
+        cursor: pointer; 
+        border-radius: 4px; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        justify-content: center; 
+        aspect-ratio: 1/1;
+        position: relative;
+        overflow: hidden;
+    }
 
-    <style>
-        :root { --gold: #D4AF37; --bg: #050505; --panel: #0a0a0a; }
-        body { background-color: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .serif { font-family: 'Cinzel', serif; }
-        .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .glass-tile { background: var(--panel); border: 1px solid rgba(255,255,255,0.05); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; aspect-ratio: 1/1; }
-        .glass-tile:hover { border-color: var(--gold); transform: translateY(-5px); background: rgba(212, 175, 55, 0.05); }
-        
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; backdrop-filter: blur(15px); }
-        .modal-content { background: #0c0c0c; border: 1px solid var(--gold); max-width: 450px; width: 92%; margin: 12vh auto; padding: 2.5rem; border-radius: 4px; position: relative; }
-        .close-btn { position: absolute; top: 1.5rem; right: 1.5rem; color: var(--gold); font-size: 20px; cursor: pointer; }
-        
-        #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: fadeOut 1.2s ease 2.5s forwards; pointer-events: none; }
-        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-        #video-bg { position: fixed; inset: 0; z-index: -10; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; filter: grayscale(100%); }
-        input { background: #000 !important; border: 1px solid rgba(212, 175, 55, 0.3) !important; color: #fff !important; }
-        
-        /* QR Styling */
-        #qr img { margin: 0 auto; border: 4px solid white; }
-    </style>
-</head>
-<body>
+    /* Interaction States */
+    .glass-tile:hover { 
+        border-color: var(--gold); 
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 15px var(--glint);
+        background: rgba(212, 175, 55, 0.08);
+    }
 
-    <div id="ritual-overlay">
-        <img src="logo.png" class="w-24 h-24 mb-4 animate-pulse">
-        <div class="text-[10px] tracking-[0.4em] text-gold uppercase opacity-60 font-mono">> INITIATING SOVEREIGN PROTOCOL...</div>
-    </div>
+    .glass-tile:active { 
+        transform: translateY(-2px) scale(0.98); 
+        filter: brightness(1.2);
+    }
 
-    <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
+    /* Scanning Glint Effect */
+    .glass-tile::after {
+        content: "";
+        position: absolute;
+        top: -100%;
+        left: -100%;
+        width: 300%;
+        height: 300%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.03), transparent);
+        transition: 0.5s;
+        pointer-events: none;
+    }
+    .glass-tile:hover::after {
+        top: 0; left: 0; transition: 0.8s;
+    }
 
-    <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
-        <div class="serif text-2xl gold-text tracking-tighter cursor-pointer" onclick="location.reload()">M.O.G.</div>
-        <div class="flex items-center gap-2">
-            <div class="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_10px_#00f2ff]"></div>
-            <span class="text-[8px] uppercase tracking-widest text-cyan-400">Signal: Secure</span>
-        </div>
-    </nav>
+    /* QR ID Pass Styling */
+    #qr-container { 
+        background: white; 
+        padding: 10px; 
+        border-radius: 2px;
+        box-shadow: 0 0 25px rgba(212, 175, 55, 0.2);
+    }
+    
+    #qr canvas { max-width: 100%; height: auto !important; }
 
-    <main class="relative z-10 pt-28 px-8 max-w-lg mx-auto text-center h-screen overflow-y-auto pb-40">
-        <img src="logo.png" class="w-28 h-28 mx-auto mb-6 border border-gold/10 rounded-full shadow-2xl">
-        <h1 class="serif text-5xl gold-text mb-1 italic">MANIFEST</h1>
-        <p class="text-[9px] tracking-[0.4em] text-zinc-500 mb-12 uppercase">Sovereign Command Interface</p>
+    /* Identity Modal specific */
+    .identity-pass {
+        animation: slideUp 0.6s ease-out forwards;
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
 
-        <div class="grid grid-cols-2 gap-5">
-            <div onclick="openNode('identity')" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Identity</div>
-            </div>
-            <div onclick="openNode('gallery')" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Vault</div>
-            </div>
-            <div onclick="openNode('crew')" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Crew</div>
-            </div>
-            <div onclick="openNode('access')" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Command</div>
-            </div>
-        </div>
-    </main>
+<script>
+    // ... (Keep your existing Supabase Consts) ...
 
-    <div id="node-modal" class="modal" onclick="closeNode()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <span class="close-btn" onclick="closeNode()">&times;</span>
-            <h2 id="node-title" class="serif text-3xl gold-text mb-2 italic"></h2>
-            <p id="node-subtitle" class="text-[9px] text-zinc-500 mb-8 tracking-[0.3em] uppercase">Access Node</p>
-            <div id="node-body" class="mb-10 text-zinc-400 text-[12px] leading-relaxed"></div>
-            <div id="node-action-zone"></div>
-        </div>
-    </div>
-
-    <script>
-        const SUPABASE_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
-        const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-        let currentUser = null;
-
-        const NODES = {
-            identity: {
-                title: "Identity",
-                body: "Establish your unique operative alias and secure your identity within the M.O.G. network.",
-                action: `
-                    <div id="registration-form">
-                        <input type="text" id="alias-input" placeholder="ENTER ALIAS" class="w-full p-4 mb-4 text-center text-[11px] tracking-widest uppercase outline-none border border-gold/30">
-                        <button onclick="register()" id="reg-btn" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-widest hover:bg-white transition-colors">
-                            Establish Alias →
-                        </button>
-                    </div>`
-            },
-            gallery: {
-                title: "Vault",
-                body: "Access classified visual intelligence and mission documentation.",
-                action: `<button onclick="closeNode()" class="w-full py-4 border border-gold text-gold font-bold uppercase text-[10px] tracking-widest">Initialize Archive →</button>`
-            },
-            crew: {
-                title: "Crew",
-                body: "Monitor operative status and receive live command broadcasts within the sector.",
-                action: `<div id="crew-display" class="space-y-2 mb-6 max-h-32 overflow-y-auto"></div><button onclick="loadCrew()" class="w-full py-4 border border-gold/30 text-gold/60 text-[9px] uppercase tracking-widest">Refresh Signal</button>`
-            },
-            access: {
-                title: "Command",
-                body: "Director-level authentication. Restricted to authorized leadership personnel.",
-                action: `<input type="password" id="cmd-key" placeholder="CLEARANCE CODE" class="w-full p-4 mb-4 text-center outline-none border border-gold/30"><button onclick="auth()" class="w-full py-4 bg-gold text-black font-bold uppercase text-[10px]">Authorize Entry →</button>`
-            }
-        };
-
-        // --- AUTH & INIT ---
-        async function initAuth() {
-            if (!supabase) return;
-            const { data } = await supabase.auth.signInAnonymously();
-            if (data) currentUser = data.user;
-        }
-        initAuth();
-
-        function openNode(id) {
-            const node = NODES[id];
-            document.getElementById('node-title').innerText = node.title;
-            document.getElementById('node-body').innerHTML = node.body;
-            document.getElementById('node-action-zone').innerHTML = node.action;
-            document.getElementById('node-modal').style.display = 'block';
+    function renderAccessPass(alias, id) {
+        document.getElementById('node-body').innerHTML = `
+            <div class='identity-pass flex flex-col items-center'>
+                <div id='qr-wrap' class='p-2 bg-white mb-6 border-2 border-gold shadow-xl'>
+                    <div id='qr'></div>
+                </div>
+                <div class='text-center'>
+                    <p class='text-[10px] tracking-[0.4em] text-zinc-500 uppercase mb-1'>Identity Confirmed</p>
+                    <div class='gold-text font-bold text-3xl tracking-tighter serif mb-2'>${alias}</div>
+                    <div class='text-[8px] font-mono text-zinc-600 opacity-50 mb-4'>SECURE_ID: ${id.slice(0,18)}...</div>
+                </div>
+            </div>`;
             
-            if(id === 'identity') checkUserStatus();
-            if(id === 'crew') loadCrew();
-        }
+        document.getElementById('node-action-zone').innerHTML = `
+            <div class="flex flex-col gap-3">
+                <button onclick="downloadID('${alias}')" class="w-full py-4 bg-white text-black font-black uppercase text-[10px] tracking-widest hover:bg-gold transition-colors">
+                    Download Access Pass ↓
+                </button>
+                <button onclick="closeNode()" class="w-full py-3 border border-gold/20 text-zinc-500 font-bold uppercase text-[8px] tracking-[0.3em]">
+                    Exit Terminal
+                </button>
+            </div>`;
 
-        function closeNode() { document.getElementById('node-modal').style.display = 'none'; }
-
-        // --- IDENTITY NODE LOGIC ---
-        async function checkUserStatus() {
-            if (!currentUser) return;
-            const { data: op } = await supabase.from('operatives').select('alias, id').eq('id', currentUser.id).single();
-            if (op) renderAccessPass(op.alias, op.id);
-        }
-
-        async function register() {
-            const aliasField = document.getElementById('alias-input');
-            const btn = document.getElementById('reg-btn');
-            const alias = aliasField.value.trim().toUpperCase();
-
-            if (!alias || !currentUser) return alert("ALIAS REQUIRED FOR UPLINK");
-
-            btn.innerText = "LINKING SYSTEM...";
-            btn.disabled = true;
-
-            const { error } = await supabase.from('operatives').upsert([{ id: currentUser.id, alias: alias }]);
-
-            if (error) {
-                alert("ALIAS TAKEN OR SIGNAL LOST");
-                btn.innerText = "ESTABLISH ALIAS →";
-                btn.disabled = false;
-            } else {
-                renderAccessPass(alias, currentUser.id);
-            }
-        }
-
-        function renderAccessPass(alias, id) {
-            document.getElementById('node-body').innerHTML = `
-                <div class='flex flex-col items-center animate-pulse'>
-                    <div id='qr' class='p-2 bg-white mb-6 border-2 border-gold'></div>
-                    <div class='text-center'>
-                        <p class='text-[10px] tracking-[0.3em] text-zinc-500 uppercase mb-1'>Operative Status</p>
-                        <div class='gold-text font-bold text-2xl tracking-tighter serif mb-2'>${alias}</div>
-                        <div class='text-[8px] font-mono text-zinc-600 opacity-50 px-4'>UID: ${id}</div>
-                    </div>
-                </div>`;
-            document.getElementById('node-action-zone').innerHTML = `
-                <button onclick="closeNode()" class="w-full py-4 border border-gold/20 text-zinc-500 font-bold uppercase text-[9px] tracking-widest mt-4">Close Secure Terminal</button>`;
-
+        // Generate high-res QR
+        setTimeout(() => {
             new QRCode(document.getElementById("qr"), {
                 text: `MOG-IDENTITY:${id}`,
-                width: 160, height: 160,
-                colorDark: "#000000", colorLight: "#ffffff",
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
+        }, 50);
+    }
+
+    // Logic to save the QR as an Image
+    function downloadID(alias) {
+        const qrCanvas = document.querySelector('#qr canvas');
+        if (!qrCanvas) return alert("SIGNAL INTERRUPTED");
+        
+        const link = document.createElement('a');
+        link.download = `MOG_PASS_${alias}.png`;
+        link.href = qrCanvas.toDataURL("image/png");
+        link.click();
+    }
+
+    // Enhance openNode for better haptics
+    function openNode(id) {
+        // Trigger haptic feedback if available
+        if (window.navigator && window.navigator.vibrate) {
+            window.navigator.vibrate(20);
         }
 
-        // --- UTILITY ---
-        async function loadCrew() {
-            const { data } = await supabase.from('operatives').select('alias').limit(15);
-            if(data) {
-                document.getElementById('crew-display').innerHTML = data.map(o => `
-                    <div class='flex justify-between p-3 border-b border-white/5 text-[10px] tracking-widest'>
-                        <span>${o.alias.toUpperCase()}</span>
-                        <span class="text-gold opacity-50">ACTIVE</span>
-                    </div>`).join('');
-            }
-        }
-
-        function auth() {
-            if(document.getElementById('cmd-key').value === '7486') alert("COMMAND CLEARANCE GRANTED");
-            else alert("ACCESS DENIED");
-        }
-    </script>
-</body>
-</html>
+        const node = NODES[id];
+        const modal = document.getElementById('node-modal');
+        
+        document.getElementById('node-title').innerText = node.title;
+        document.getElementById('node-body').innerHTML = node.body;
+        document.getElementById('node-action-zone').innerHTML = node.action;
+        
+        modal.style.display = 'block';
+        modal.classList.add('animate-in', 'fade-in', 'duration-300');
+        
+        if(id === 'identity') checkUserStatus();
+        if(id === 'crew') loadCrew();
+    }
+</script>
