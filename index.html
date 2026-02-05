@@ -11,73 +11,63 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;900&display=swap" rel="stylesheet">
 
     <style>
-        :root { --gold: #D4AF37; --bg: #050505; }
+        :root { --gold: #D4AF37; --bg: #050505; --panel: #0a0a0a; }
         body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        /* Scanline Effect */
-        body::before {
-            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 100; background-size: 100% 2px, 3px 100%; pointer-events: none;
-        }
+        .glass-tile { background: var(--panel); border: 1px solid rgba(212, 175, 55, 0.1); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .glass-tile:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); transform: translateY(-2px); }
 
-        .glass-tile { 
-            background: rgba(10, 10, 10, 0.8); border: 1px solid rgba(212, 175, 55, 0.1); 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative;
-        }
-        .glass-tile:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); transform: scale(1.02); }
-
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 200; backdrop-filter: blur(20px); align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 200; backdrop-filter: blur(25px); align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
         .modal.active { display: flex; opacity: 1; }
 
-        input { background: #000 !important; border: 1px solid var(--gold) !important; color: #fff !important; text-align: center; padding: 1rem; width: 100%; font-weight: 900; letter-spacing: 3px; }
+        input, textarea { background: #000 !important; border: 1px solid rgba(212,175,55,0.3) !important; color: #fff !important; padding: 1rem; width: 100%; font-size: 11px; outline: none; }
+        input:focus, textarea:focus { border-color: var(--gold) !important; }
         
-        /* Loading Spinner */
-        .spinner { width: 20px; height: 20px; border: 2px solid var(--gold); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .vault-entry { border-left: 1px solid var(--gold); padding: 8px 12px; margin-bottom: 10px; background: rgba(255,255,255,0.02); text-align: left; }
+        
+        ::-webkit-scrollbar { width: 2px; }
+        ::-webkit-scrollbar-thumb { background: var(--gold); }
     </style>
 </head>
 <body>
 
-    <div class="fixed inset-0 z-0 opacity-30">
-        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-    </div>
-
     <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
-        <div class="serif text-2xl gold-text tracking-tighter" onclick="location.reload()">M.O.G.</div>
+        <div class="serif text-2xl gold-text cursor-pointer" onclick="location.reload()">M.O.G.</div>
         <div id="auth-status" class="text-[8px] tracking-[0.3em] text-zinc-500 uppercase flex items-center gap-2">
-            Connecting... <div class="w-2 h-2 rounded-full bg-zinc-800" id="status-dot"></div>
+            INITIALIZING... <div class="w-1.5 h-1.5 rounded-full bg-zinc-800" id="status-dot"></div>
         </div>
     </nav>
 
-    <main class="relative z-10 pt-28 px-8 max-w-lg mx-auto text-center">
-        <div class="serif text-5xl gold-text mb-2 italic">MANIFEST</div>
-        <p class="text-[9px] tracking-[0.5em] text-zinc-500 mb-12 uppercase">Sovereign Identity Terminal</p>
+    <main class="relative z-10 pt-32 px-8 max-w-lg mx-auto text-center">
+        <h1 class="serif text-5xl gold-text mb-2 italic">MANIFEST</h1>
+        <p class="text-[9px] tracking-[0.6em] text-zinc-400 mb-12 uppercase">Sovereign Encryption Node</p>
 
-        <div class="grid grid-cols-2 gap-4" id="main-grid">
-            <div onclick="UI.open('auth')" class="glass-tile aspect-square flex items-center justify-center">
+        <div class="grid grid-cols-2 gap-5">
+            <div onclick="UI.open('auth')" class="glass-tile aspect-square flex flex-col items-center justify-center p-4">
                 <div class="text-[10px] tracking-widest uppercase font-black text-gold">Identity</div>
             </div>
-            <div onclick="UI.open('vault')" class="glass-tile aspect-square flex items-center justify-center opacity-50">
-                <div class="text-[10px] tracking-widest uppercase font-black text-zinc-500">Vault</div>
+            <div onclick="UI.open('vault')" class="glass-tile aspect-square flex flex-col items-center justify-center p-4">
+                <div class="text-[10px] tracking-widest uppercase font-black text-gold">Vault</div>
             </div>
-            <div onclick="UI.open('crew')" class="glass-tile aspect-square flex items-center justify-center opacity-50">
+            <div onclick="UI.open('crew')" class="glass-tile aspect-square flex flex-col items-center justify-center p-4 opacity-40">
                 <div class="text-[10px] tracking-widest uppercase font-black text-zinc-500">Crew</div>
             </div>
-            <div onclick="UI.open('command')" class="glass-tile aspect-square flex items-center justify-center opacity-50">
+            <div onclick="UI.open('command')" class="glass-tile aspect-square flex flex-col items-center justify-center p-4 opacity-40">
                 <div class="text-[10px] tracking-widest uppercase font-black text-zinc-500">Command</div>
             </div>
         </div>
     </main>
 
     <div id="modal" class="modal">
-        <div class="p-8 w-full max-w-sm text-center">
-            <h2 id="m-title" class="serif text-3xl gold-text mb-2"></h2>
-            <div id="m-body" class="text-[10px] tracking-widest text-zinc-400 uppercase mb-8"></div>
-            <div id="m-action" class="space-y-3"></div>
-            <button onclick="UI.close()" class="mt-8 text-[8px] text-zinc-600 tracking-[0.4em] uppercase hover:text-white transition-colors">Close Terminal</button>
+        <div class="p-8 w-full max-w-md h-full md:h-auto overflow-y-auto">
+            <h2 id="m-title" class="serif text-3xl gold-text mb-2 italic"></h2>
+            <div id="m-body" class="text-[10px] tracking-widest text-zinc-500 uppercase mb-8"></div>
+            <div id="m-action" class="space-y-4"></div>
+            <div class="mt-12">
+                <button onclick="UI.close()" class="text-[8px] text-zinc-600 tracking-[0.4em] uppercase hover:text-gold transition-all">Terminate Link</button>
+            </div>
         </div>
     </div>
 
@@ -88,17 +78,12 @@
 
         const UI = {
             open: (node) => {
-                const m = document.getElementById('modal');
-                m.classList.add('active');
+                document.getElementById('modal').classList.add('active');
                 if(node === 'auth') Auth.check();
-                else {
-                    document.getElementById('m-title').innerText = "RESTRICTED";
-                    document.getElementById('m-body').innerText = "Clearance Level 4 Required";
-                    document.getElementById('m-action').innerHTML = "";
-                }
+                if(node === 'vault') Vault.load();
             },
             close: () => document.getElementById('modal').classList.remove('active'),
-            setBody: (title, body, action = "") => {
+            update: (title, body, action = "") => {
                 document.getElementById('m-title').innerText = title;
                 document.getElementById('m-body').innerHTML = body;
                 document.getElementById('m-action').innerHTML = action;
@@ -108,49 +93,52 @@
         const Auth = {
             user: null,
             init: async () => {
-                // Persistent Auth Listener
                 supabase.auth.onAuthStateChange((event, session) => {
                     Auth.user = session?.user || null;
-                    const dot = document.getElementById('status-dot');
-                    const text = document.getElementById('auth-status');
-                    if(Auth.user) {
-                        dot.className = "w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_cyan]";
-                        text.innerText = "Sovereign Link Active";
-                    } else {
-                        dot.className = "w-2 h-2 rounded-full bg-red-900";
-                        text.innerText = "Offline Mode";
-                    }
+                    document.getElementById('status-dot').style.background = Auth.user ? "#00f3ff" : "#333";
+                    document.getElementById('auth-status').innerText = Auth.user ? "LINK ESTABLISHED" : "LINK SEVERED";
                 });
-
                 const { data } = await supabase.auth.getSession();
                 if(!data.session) await supabase.auth.signInAnonymously();
             },
             check: async () => {
-                UI.setBody("SCANNING", "<div class='spinner'></div>");
                 const { data: op } = await supabase.from('operatives').select('*').eq('id', Auth.user.id).single();
-                op ? Auth.renderID(op.alias, op.id) : Auth.showPortal();
+                if(op) {
+                    UI.update(op.alias, `ID: ${op.id}`, `<div id="qr" class="bg-white p-2 inline-block mb-4"></div>`);
+                    new QRCode(document.getElementById("qr"), { text: op.id, width: 150, height: 150 });
+                } else {
+                    UI.update("NEW IDENTITY", "Register alias", `<input id="a-in" placeholder="ALIAS"><button onclick="Auth.reg()" class="w-full bg-[#D4AF37] py-4 text-black font-black text-[10px]">REGISTER</button>`);
+                }
             },
-            showPortal: () => {
-                UI.setBody("IDENTITY", "Register Alias with Manifest", `
-                    <input type="text" id="a-input" placeholder="ALIAS">
-                    <button onclick="Auth.handle('REG')" class="w-full bg-[#D4AF37] text-black py-4 font-black text-[10px] tracking-widest">INITIALIZE</button>
+            reg: async () => {
+                const alias = document.getElementById('a-in').value.toUpperCase();
+                await supabase.from('operatives').insert([{ id: Auth.user.id, alias }]);
+                Auth.check();
+            }
+        };
+
+        const Vault = {
+            load: async () => {
+                UI.update("THE VAULT", "Accessing Encrypted Records...", "<div class='animate-pulse'>DECRYPTING...</div>");
+                const { data } = await supabase.from('vault').select('*').eq('user_id', Auth.user.id).order('created_at', { ascending: false });
+                
+                let list = data?.map(item => `<div class="vault-entry"><div class="text-white mb-1">${item.content}</div><div class="text-[7px] text-zinc-600">${new Date(item.created_at).toLocaleString()}</div></div>`).join('') || "NO RECORDS FOUND";
+                
+                UI.update("THE VAULT", "Encrypted Manifesto Storage", `
+                    <div class="max-h-48 overflow-y-auto mb-6">${list}</div>
+                    <textarea id="v-in" placeholder="NEW SECRET ENTRY..." rows="3"></textarea>
+                    <button onclick="Vault.save()" class="w-full border border-gold text-gold py-4 font-bold text-[10px]">COMMIT TO VAULT</button>
                 `);
             },
-            handle: async (mode) => {
-                const alias = document.getElementById('a-input').value.trim().toUpperCase();
-                if(!alias) return;
-                const { error } = await supabase.from('operatives').insert([{ id: Auth.user.id, alias }]);
-                if(error) alert("ALIAS TAKEN");
-                else Auth.check();
-            },
-            renderID: (alias, id) => {
-                UI.setBody(alias, `ID: ${id}`, `<div id="qr" class="bg-white p-2 inline-block"></div>`);
-                new QRCode(document.getElementById("qr"), { text: id, width: 120, height: 120 });
+            save: async () => {
+                const content = document.getElementById('v-in').value;
+                if(!content) return;
+                await supabase.from('vault').insert([{ user_id: Auth.user.id, content }]);
+                Vault.load();
             }
         };
 
         Auth.init();
     </script>
-
 </body>
 </html>
