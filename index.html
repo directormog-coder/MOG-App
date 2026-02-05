@@ -8,22 +8,55 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;900&display=swap" rel="stylesheet">
     <style>
-        :root { --gold: #D4AF37; --blue: #00d2ff; --bg: #050505; --red: #ff4444; }
+        :root { --gold: #D4AF37; --blue: #00d2ff; --bg: #050505; }
         body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
         .serif { font-family: 'Cinzel', serif; }
-        .mog-logo { width: 140px; height: auto; margin: 0 auto 20px auto; display: block; filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4)); }
+        
+        /* THE OFFICIAL EMBLEM */
+        .mog-emblem { 
+            width: 160px; height: 160px; margin: 0 auto 20px auto; 
+            border-radius: 50%;
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        /* GUARANTEED CLICKABLE GRID */
         #main-grid { position: relative; z-index: 500 !important; }
-        .glass-tile { background: rgba(10, 10, 10, 0.95); border: 1px solid rgba(0, 210, 255, 0.2); transition: all 0.15s ease; cursor: pointer; display: flex; align-items: center; justify-content: center; pointer-events: auto !important; }
-        .glass-tile:active { transform: scale(0.94); border-color: var(--blue); box-shadow: 0 0 25px rgba(0, 210, 255, 0.4); }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 1000; backdrop-filter: blur(35px); align-items: center; justify-content: center; opacity: 0; transition: 0.2s; }
+        .glass-tile { 
+            background: rgba(10, 10, 10, 0.95); 
+            border: 1px solid rgba(0, 210, 255, 0.2); 
+            box-shadow: inset 0 0 15px rgba(0, 210, 255, 0.05);
+            transition: 0.1s; 
+            cursor: pointer; 
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: auto !important;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .glass-tile:active { 
+            transform: scale(0.94); 
+            border-color: var(--blue); 
+            box-shadow: 0 0 25px rgba(0, 210, 255, 0.4); 
+        }
+
+        .modal { 
+            display: none; position: fixed; inset: 0; 
+            background: rgba(0,0,0,0.98); z-index: 2000; 
+            backdrop-filter: blur(35px); align-items: center; 
+            justify-content: center; opacity: 0; transition: 0.2s; 
+        }
         .modal.active { display: flex; opacity: 1; }
-        .action-btn { width: 100%; border: 1px solid var(--blue); padding: 18px; font-size: 10px; font-weight: 900; letter-spacing: 0.3em; color: var(--blue); margin-bottom: 12px; background: transparent; text-transform: uppercase; }
+        
+        .action-btn { 
+            width: 100%; border: 1px solid var(--blue); padding: 18px; 
+            font-size: 10px; font-weight: 900; letter-spacing: 0.2em; 
+            color: var(--blue); margin-bottom: 12px; background: transparent;
+            text-transform: uppercase;
+        }
         .action-btn:active { background: var(--blue); color: #000; }
-        .btn-danger { border-color: var(--red); color: var(--red); margin-top: 20px; opacity: 0.5; }
-        .btn-danger:hover { opacity: 1; background: var(--red); color: #000; }
-        input { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(0, 210, 255, 0.3) !important; color: #fff !important; padding: 14px; width: 100%; margin-bottom: 12px; outline: none; }
-        .toggle-container { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; color: #666; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; }
-        .text-link { font-size: 8px; color: var(--blue); text-transform: uppercase; letter-spacing: 1px; cursor: pointer; opacity: 0.6; transition: 0.2s; display: block; margin-top: 5px; }
+        
+        input { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(0, 210, 255, 0.3) !important; color: #fff !important; padding: 14px; width: 100%; margin-bottom: 10px; outline: none; border-radius: 0; }
+        .text-link { font-size: 8px; color: var(--blue); text-transform: uppercase; letter-spacing: 1px; cursor: pointer; opacity: 0.6; display: block; margin-top: 5px; }
+        .director-tile { border: 1px double var(--gold) !important; box-shadow: 0 0 15px rgba(212, 175, 55, 0.2) !important; }
     </style>
 </head>
 <body>
@@ -33,22 +66,23 @@
         <div class="text-[8px] tracking-[0.5em] text-zinc-600 uppercase" id="session-status">OFFLINE</div>
     </nav>
 
-    <main class="relative pt-24 text-center z-10 flex flex-col justify-center h-full">
-        <img src="https://raw.githubusercontent.com/ministryofgroove/manifest/main/logo.png" alt="M.O.G." class="mog-logo">
-        <h1 class="serif text-4xl text-[#D4AF37] mb-12 italic tracking-tighter">MANIFEST</h1>
+    <main class="relative pt-12 text-center z-10 flex flex-col justify-center h-full">
+        <img src="https://i.ibb.co/Lz0D79m/1000201660.jpg" alt="M.O.G. CABINET" class="mog-emblem">
         
-        <div class="grid-container max-w-sm mx-auto px-6 w-full" id="main-grid">
+        <h1 class="serif text-4xl text-[#D4AF37] mb-12 italic tracking-tighter shadow-black">MANIFEST</h1>
+        
+        <div class="max-w-sm mx-auto px-6 w-full" id="main-grid">
             <div class="grid grid-cols-2 gap-4">
-                <div onclick="UI.open('auth')" class="glass-tile py-12">
+                <div onclick="UI.open('auth')" class="glass-tile py-10">
                     <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Identity</span>
                 </div>
-                <div onclick="UI.open('files')" class="glass-tile py-12">
+                <div onclick="UI.open('files')" class="glass-tile py-10">
                     <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Binary Store</span>
                 </div>
-                <div onclick="UI.open('comms')" class="glass-tile py-12">
+                <div onclick="UI.open('comms')" class="glass-tile py-10">
                     <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Transmit</span>
                 </div>
-                <div onclick="UI.open('global')" class="glass-tile py-12">
+                <div onclick="UI.open('global')" class="glass-tile py-10">
                     <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Global Log</span>
                 </div>
             </div>
@@ -58,9 +92,9 @@
     <div id="modal" class="modal">
         <div class="p-10 w-full max-w-sm text-center">
             <h2 id="m-title" class="serif text-3xl text-[#D4AF37] mb-2 italic"></h2>
-            <div id="m-body" class="text-[9px] tracking-[0.4em] text-blue-400 uppercase mb-10 border-b border-blue-900/30 pb-4"></div>
+            <div id="m-body" class="text-[9px] tracking-[0.4em] text-blue-400 uppercase mb-8 border-b border-blue-900/30 pb-4"></div>
             <div id="m-action-container"></div>
-            <button onclick="UI.close()" class="mt-8 text-[9px] text-zinc-600 tracking-[0.5em] uppercase hover:text-white transition-all underline">Terminate Link</button>
+            <button onclick="UI.close()" class="mt-8 text-[9px] text-zinc-600 tracking-[0.5em] uppercase hover:text-white underline">Close Connection</button>
         </div>
     </div>
 
@@ -74,8 +108,12 @@
                 const modal = document.getElementById('modal');
                 modal.style.display = 'flex';
                 setTimeout(() => modal.classList.add('active'), 10);
+                
                 if(node === 'auth') Auth.checkState();
-                else UI.render(node.toUpperCase(), "ACCESSING...", "<p class='text-zinc-600'>SCANNING GRID</p>");
+                if(node === 'files') Files.showGateway();
+                if(node === 'comms') Transmit.showGateway();
+                if(node === 'global') UI.render("GLOBAL LOG", "Network Feed", "<p class='text-zinc-600'>SCANNING...</p>");
+                if(node === 'director') Director.load();
             },
             close: () => {
                 const modal = document.getElementById('modal');
@@ -90,57 +128,38 @@
         };
 
         const Auth = {
-            user: null,
             checkState: async () => {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
                     const { data: profile } = await supabase.from('operatives').select('alias').eq('id', user.id).single();
-                    UI.render("IDENTITY", `WELCOME, ${profile?.alias || 'OPERATIVE'}`, `
-                        <button onclick="supabase.auth.signOut().then(() => UI.close())" class="action-btn">Disconnect Session</button>
-                        <button onclick="Auth.showDecommission()" class="action-btn btn-danger">Decommission Profile</button>
+                    UI.render("IDENTITY", `LOGGED IN: ${profile?.alias || 'OPERATIVE'}`, `
+                        <button onclick="supabase.auth.signOut().then(() => UI.close())" class="action-btn">Disconnect</button>
+                        <button onclick="Auth.handleDecommission()" class="action-btn !text-red-500 !border-red-500 mt-4 opacity-50">Decommission Profile</button>
                     `);
                 } else {
                     Auth.showGateway();
                 }
             },
             showGateway: () => {
-                UI.render("IDENTITY", "Access Protocol", `
+                UI.render("IDENTITY", "Access Logic", `
                     <button onclick="Auth.showLogin()" class="action-btn">Reconnect (Login)</button>
                     <button onclick="Auth.showRegister()" class="action-btn">Join Grid (Register)</button>
                 `);
             },
             showLogin: () => {
-                const savedEmail = localStorage.getItem('mog_operative_email') || "";
-                UI.render("LOGIN", "Credentials Required", `
-                    <input type="email" id="email" placeholder="EMAIL ADDRESS" value="${savedEmail}">
+                const savedEmail = localStorage.getItem('mog_email') || "";
+                UI.render("LOGIN", "Enter Credentials", `
+                    <input type="email" id="email" placeholder="EMAIL" value="${savedEmail}">
                     <input type="password" id="pass" placeholder="PASSWORD">
-                    <div class="toggle-container">
-                        <input type="checkbox" id="remember" ${savedEmail ? 'checked' : ''} style="width: auto; margin: 0;">
-                        <label for="remember">Remember Operative</label>
-                    </div>
-                    <button onclick="Auth.handleLogin()" class="action-btn !bg-blue-500 !text-black border-none">Authenticate</button>
+                    <button onclick="Auth.handleLogin()" class="action-btn !bg-blue-500 !text-black border-none">Connect</button>
                     <span class="text-link" onclick="Auth.showForgot()">Forgot Password?</span>
                     <span class="text-link" onclick="Auth.showGateway()">Back</span>
                 `);
             },
-            showDecommission: () => {
-                UI.render("WARNING", "Permanent Exit", `
-                    <p class="text-[8px] text-red-500 mb-6 tracking-widest uppercase">This will permanently delete your alias and credentials. This action cannot be reversed.</p>
-                    <button onclick="Auth.handleDecommission()" class="action-btn !bg-red-600 !text-white border-none">Confirm Decommission</button>
-                    <span class="text-link" onclick="Auth.checkState()">Cancel</span>
-                `);
-            },
-            showForgot: () => {
-                UI.render("RECOVERY", "Send Reset Signal", `
-                    <input type="email" id="reset-email" placeholder="EMAIL ADDRESS">
-                    <button onclick="Auth.handleForgot()" class="action-btn">Send Recovery</button>
-                    <span class="text-link" onclick="Auth.showLogin()">Back</span>
-                `);
-            },
             showRegister: () => {
-                UI.render("REGISTER", "New Operative", `
-                    <input type="text" id="alias" placeholder="OPERATIVE ALIAS">
-                    <input type="email" id="email" placeholder="EMAIL ADDRESS">
+                UI.render("REGISTER", "New Profile", `
+                    <input type="text" id="alias" placeholder="ALIAS">
+                    <input type="email" id="email" placeholder="EMAIL">
                     <input type="password" id="pass" placeholder="PASSWORD">
                     <button onclick="Auth.handleReg()" class="action-btn !bg-blue-500 !text-black border-none">Initialize</button>
                     <span class="text-link" onclick="Auth.showGateway()">Back</span>
@@ -149,43 +168,35 @@
             handleLogin: async () => {
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('pass').value;
-                if(document.getElementById('remember').checked) localStorage.setItem('mog_operative_email', email);
-                else localStorage.removeItem('mog_operative_email');
+                localStorage.setItem('mog_email', email);
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if(error) alert(error.message); else UI.close();
-            },
-            handleDecommission: async () => {
-                const { data: { user } } = await supabase.auth.getUser();
-                if(user) {
-                    // 1. Wipe from public table
-                    await supabase.from('operatives').delete().eq('id', user.id);
-                    // 2. Note: For full auth deletion, typically requires a Supabase Edge Function 
-                    // or a service role. For now, we sign out and alert the user.
-                    await supabase.auth.signOut();
-                    alert("IDENTITY PURGED FROM GRID.");
-                    UI.close();
-                }
-            },
-            handleReg: async () => {
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('pass').value;
-                const alias = (document.getElementById('alias').value || 'ANON').toUpperCase();
-                const { data, error } = await supabase.auth.signUp({ email, password });
-                if(data.user) {
-                    await supabase.from('operatives').insert([{ id: data.user.id, alias }]);
-                    UI.close();
-                }
-                if(error) alert(error.message);
-            },
-            handleForgot: async () => {
-                const email = document.getElementById('reset-email').value;
-                const { error } = await supabase.auth.resetPasswordForEmail(email);
-                if(error) alert(error.message); else alert("Recovery signal sent.");
             }
         };
 
-        supabase.auth.onAuthStateChange((event, session) => {
-            document.getElementById('session-status').innerText = session ? "ONLINE" : "OFFLINE";
+        const Files = {
+            showGateway: () => UI.render("VAULT", "Data Storage", `<button class="action-btn">Browse Assets</button><button class="action-btn">Upload Packet</button>`)
+        };
+
+        const Transmit = {
+            showGateway: () => UI.render("TRANSMIT", "P2P Link", `<button class="action-btn">Search Operatives</button><button class="action-btn">Encrypted Inbox</button>`)
+        };
+
+        const Director = {
+            inject: () => {
+                if(document.getElementById('dir-tile')) return;
+                const grid = document.getElementById('main-grid');
+                const tile = document.createElement('div');
+                tile.id = 'dir-tile'; tile.className = 'glass-tile py-10 col-span-2 director-tile';
+                tile.onclick = () => UI.open('director');
+                tile.innerHTML = `<div class="text-[10px] font-black text-gold uppercase tracking-[0.3em]">Director Console</div>`;
+                grid.appendChild(tile);
+            }
+        };
+
+        supabase.auth.onAuthStateChange((e, s) => {
+            document.getElementById('session-status').innerText = s ? "ONLINE" : "OFFLINE";
+            if(s?.user?.email === 'director.mog@gmail.com') Director.inject();
         });
     </script>
 </body>
