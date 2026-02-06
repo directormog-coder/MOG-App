@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>M.O.G. | VAULT UPLINK</title>
+    <title>M.O.G. | CREW SYNC</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -23,21 +23,19 @@
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 200; backdrop-filter: blur(20px); }
         .modal-content { background: #0c0c0c; border: 1px solid var(--gold); max-width: 450px; width: 92%; margin: 5vh auto; padding: 1.5rem; border-radius: 4px; position: relative; max-height: 85vh; overflow-y: auto; }
         
-        /* Camera UI */
-        #camera-preview { width: 100%; aspect-ratio: 1/1; background: #000; border: 1px solid var(--gold); transform: scaleX(-1); object-fit: cover; }
-        .vault-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
-        .vault-item { aspect-ratio: 1/1; background: #111; border: 1px solid rgba(212, 175, 55, 0.2); overflow: hidden; }
-        .vault-item img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) contrast(1.2); }
+        /* Crew UI */
+        .crew-card { background: rgba(255,255,255,0.02); border-left: 2px solid var(--gold); padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #00f2ff; box-shadow: 0 0 5px #00f2ff; }
 
         #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 1s; pointer-events: none; }
         #video-bg { position: fixed; inset: 0; z-index: -10; width: 100%; height: 100%; object-fit: cover; opacity: 0.1; filter: grayscale(100%); }
     </style>
 </head>
-<body class="bg-black text-white">
+<body>
 
     <div id="ritual-overlay">
         <img src="logo.png" class="w-20 h-20 mb-4 animate-pulse">
-        <div class="text-[10px] tracking-[0.4em] text-gold uppercase opacity-60 font-mono">> ENABLING OPTIC SENSORS...</div>
+        <div class="text-[10px] tracking-[0.4em] text-gold uppercase opacity-60 font-mono">> SYNCING CREW FREQUENCIES...</div>
     </div>
 
     <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
@@ -54,14 +52,16 @@
             <div onclick="openNode('vault')" class="glass-tile">
                 <div class="text-[9px] tracking-widest uppercase font-bold text-gold">Vault</div>
             </div>
-            <div class="glass-tile locked"><div class="text-[9px] uppercase font-bold text-zinc-600">Crew</div></div>
+            <div onclick="openNode('crew')" class="glass-tile">
+                <div class="text-[9px] tracking-widest uppercase font-bold text-gold">Crew</div>
+            </div>
             <div class="glass-tile locked"><div class="text-[9px] uppercase font-bold text-zinc-600">Missions</div></div>
         </div>
     </main>
 
     <div id="node-modal" class="modal">
         <div class="modal-content">
-            <span class="absolute top-4 right-4 text-gold cursor-pointer text-2xl font-light" onclick="closeModal()">&times;</span>
+            <span class="absolute top-4 right-4 text-gold cursor-pointer text-2xl" onclick="closeModal()">&times;</span>
             <h2 id="modal-title" class="serif text-2xl gold-text mb-4 italic uppercase"></h2>
             <div id="modal-body"></div>
         </div>
@@ -71,70 +71,47 @@
         const SUPABASE_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        let stream = null;
+        let currentUser;
 
         window.onload = () => {
             setTimeout(() => { document.getElementById('ritual-overlay').style.opacity = '0'; }, 2000);
+            supabase.auth.signInAnonymously().then(res => { currentUser = res.data.user; });
         };
 
         function openNode(type) {
             const body = document.getElementById('modal-body');
             document.getElementById('modal-title').innerText = type;
 
-            if(type === 'vault') {
-                body.innerHTML = `
-                    <div class="relative mb-4">
-                        <video id="camera-preview" autoplay playsinline></video>
-                        <div class="absolute inset-0 border-[20px] border-black/20 pointer-events-none"></div>
-                    </div>
-                    <button onclick="capturePhoto()" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-[0.2em] mb-6">Capture Intelligence</button>
-                    <div class="vault-grid" id="vault-items"></div>
-                `;
-                startCamera();
-                loadVault();
+            if(type === 'crew') {
+                body.innerHTML = `<div class="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest">Active Operatives</div><div id="crew-list"></div>`;
+                loadCrew();
+            } else if(type === 'identity') {
+                body.innerHTML = `<input type="text" id="alias-in" placeholder="OPERATIVE ALIAS" class="w-full bg-black border border-gold/20 p-4 mb-4 text-center text-white outline-none"><button onclick="reg()" class="w-full py-4 bg-gold text-black font-bold uppercase text-[10px]">Verify Identity</button>`;
             }
             document.getElementById('node-modal').style.display = 'block';
         }
 
-        async function startCamera() {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                document.getElementById('camera-preview').srcObject = stream;
-            } catch (e) { alert("Optic Access Denied"); }
+        async function reg() {
+            const alias = document.getElementById('alias-in').value;
+            await supabase.from('operatives').upsert([{ id: currentUser.id, alias }]);
+            alert("Frequency Established.");
+            closeModal();
         }
 
-        function closeModal() {
-            if(stream) stream.getTracks().forEach(t => t.stop());
-            document.getElementById('node-modal').style.display = 'none';
+        async function loadCrew() {
+            const { data } = await supabase.from('operatives').select('*').order('created_at', { ascending: false });
+            document.getElementById('crew-list').innerHTML = data.map(op => `
+                <div class="crew-card">
+                    <div class="text-[11px] font-bold tracking-widest uppercase">${op.alias}</div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[8px] text-cyan-400">ONLINE</span>
+                        <div class="status-dot"></div>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        async function capturePhoto() {
-            const video = document.getElementById('camera-preview');
-            const canvas = document.createElement('canvas');
-            canvas.width = 600; canvas.height = 600;
-            const ctx = canvas.getContext('2d');
-            ctx.filter = 'grayscale(100%) contrast(120%)';
-            ctx.drawImage(video, 0, 0, 600, 600);
-            
-            const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.8));
-            const fileName = `intel_${Date.now()}.jpg`;
-
-            const { data, error } = await supabase.storage.from('vault').upload(fileName, blob);
-            if(!error) {
-                const { data: { publicUrl } } = supabase.storage.from('vault').getPublicUrl(fileName);
-                await supabase.from('gallery').insert([{ image_url: publicUrl }]);
-                loadVault();
-            }
-        }
-
-        async function loadVault() {
-            const { data } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
-            if(data) {
-                document.getElementById('vault-items').innerHTML = data.map(img => `
-                    <div class="vault-item"><img src="${img.image_url}"></div>
-                `).join('');
-            }
-        }
+        function closeModal() { document.getElementById('node-modal').style.display = 'none'; }
     </script>
 </body>
 </html>
