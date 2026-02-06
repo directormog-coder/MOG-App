@@ -12,7 +12,7 @@
 
     <style>
         :root { --gold: #D4AF37; --bg: #050505; --panel: #0a0a0a; --red: #ff4444; }
-        body { background-color: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; }
+        body { background-color: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; }
         .serif { font-family: 'Cinzel', serif; }
         .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
@@ -25,6 +25,10 @@
         .mission-card { background: rgba(212, 175, 55, 0.05); border: 1px solid var(--gold); padding: 15px; margin-bottom: 12px; border-radius: 2px; position: relative; }
         .mission-card::before { content: "ACTIVE DIRECTIVE"; position: absolute; top: -8px; left: 10px; background: var(--bg); padding: 0 5px; font-size: 8px; color: var(--gold); letter-spacing: 2px; }
 
+        /* Notification Overlay */
+        #notif-toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 500; background: rgba(0,0,0,0.9); border: 1px solid var(--gold); padding: 10px 20px; border-radius: 2px; display: none; animation: slideDown 0.5s ease; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); }
+        @keyframes slideDown { from { top: -50px; opacity: 0; } to { top: 20px; opacity: 1; } }
+
         #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 1.5s; pointer-events: none; }
         #video-bg { position: fixed; inset: 0; z-index: -10; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; filter: grayscale(100%); }
     </style>
@@ -32,7 +36,11 @@
 <body>
 
     <div id="ritual-overlay">
-        <div class="text-[10px] tracking-[0.5em] text-gold uppercase opacity-60 font-mono animate-pulse">> VERIFYING DIRECTOR CLEARANCE...</div>
+        <div class="text-[10px] tracking-[0.5em] text-gold uppercase opacity-60 font-mono animate-pulse">> SYNCHRONIZING GLOBAL COMMAND...</div>
+    </div>
+
+    <div id="notif-toast">
+        <p class="text-[9px] text-gold tracking-[0.4em] uppercase font-bold text-center italic">>> NEW DIRECTIVE RECEIVED FROM DIRECTOR <<</p>
     </div>
 
     <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
@@ -76,7 +84,6 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        // DIRECTOR SIGNATURE HARD-LOCKED
         const DIRECTOR_ID = "78589425-ae81-4eb8-8496-dcf034214acb"; 
         let currentUser;
         let killSwitch = false;
@@ -86,9 +93,19 @@
             supabase.auth.signInAnonymously().then(res => { 
                 currentUser = res.data.user; 
                 if(currentUser.id === DIRECTOR_ID) document.getElementById('director-badge').style.opacity = '1';
-                console.log("COMMAND SIGNATURE:", currentUser.id);
+                
+                // Real-time Global Listener
+                supabase.channel('missions').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'missions' }, payload => {
+                    showNotification();
+                }).subscribe();
             });
         };
+
+        function showNotification() {
+            const toast = document.getElementById('notif-toast');
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        }
 
         function openNode(type) {
             const body = document.getElementById('modal-body');
@@ -100,12 +117,12 @@
                     <div class="text-[8px] mb-2 tracking-widest uppercase font-mono ${isDirector ? 'text-gold' : 'text-zinc-600'}">
                         ${isDirector ? '> DIRECTOR MODE ACTIVE' : '> ARCHIVE READ-ONLY'}
                     </div>
-                    <textarea id="mission-in" placeholder="${isDirector && !killSwitch ? 'NEW COMMAND...' : 'RESTRICTED'}" 
+                    <textarea id="mission-in" placeholder="${isDirector && !killSwitch ? 'ENTER NEW COMMAND...' : 'RESTRICTED'}" 
                         ${isDirector && !killSwitch ? '' : 'disabled'}
                         class="w-full bg-black border border-gold/20 p-4 mb-4 text-[11px] text-white outline-none h-24 focus:border-gold/50"></textarea>
                     <button id="post-btn" onclick="postMission()" 
                         class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-widest mb-8 ${isDirector && !killSwitch ? '' : 'opacity-20'}">
-                        Transmit
+                        Broadcast Directive
                     </button>
                     <div id="mission-list"></div>
                 `;
@@ -114,24 +131,15 @@
                 body.innerHTML = `
                     <div class="text-center">
                         <p class="text-[9px] text-zinc-500 mb-2 uppercase tracking-widest">Active Link ID:</p>
-                        <div class="bg-black border border-gold/20 p-3 mb-6 font-mono text-[9px] break-all text-gold select-all">
-                            ${currentUser ? currentUser.id : "SYNCING..."}
-                        </div>
+                        <div class="bg-black border border-gold/20 p-3 mb-6 font-mono text-[9px] break-all text-gold">${currentUser ? currentUser.id : "SYNCING..."}</div>
                         <input type="text" id="alias-in" placeholder="OPERATIVE ALIAS" class="w-full bg-black border border-gold/20 p-4 mb-4 text-center text-white outline-none text-[11px]">
                         <button onclick="reg()" class="w-full py-4 bg-gold text-black font-bold uppercase text-[10px]">Verify</button>
                     </div>`;
-            } else if(type === 'vault') {
-                body.innerHTML = `
-                    <div class="flex flex-col items-center py-4">
-                        <p class="text-[10px] text-gold mb-6 uppercase tracking-widest">Security Override</p>
-                        <button onclick="toggleKillSwitch()" class="w-full py-6 border border-red-500/50 text-red-500 font-bold uppercase text-[9px] tracking-[0.5em] hover:bg-red-500/10 transition">
-                            ${killSwitch ? 'RECOVER SYSTEM' : 'ENGAGE LOCKDOWN'}
-                        </button>
-                    </div>
-                `;
             } else if(type === 'crew') {
                 body.innerHTML = `<div id="crew-list" class="space-y-3"></div>`;
                 loadCrew();
+            } else if(type === 'vault') {
+                body.innerHTML = `<button onclick="toggleKillSwitch()" class="w-full py-6 border border-red-500/50 text-red-500 font-bold uppercase text-[9px] tracking-[0.5em] hover:bg-red-500/10 transition">${killSwitch ? 'RECOVER SYSTEM' : 'ACTIVATE LOCKDOWN'}</button>`;
             }
             document.getElementById('node-modal').style.display = 'block';
         }
@@ -147,13 +155,6 @@
             }
         }
 
-        function toggleKillSwitch() {
-            if (currentUser.id !== DIRECTOR_ID) return;
-            killSwitch = !killSwitch;
-            closeModal();
-            alert(killSwitch ? "SYSTEMS LOCKED." : "SYSTEMS RECOVERED.");
-        }
-
         async function loadMissions() {
             const { data } = await supabase.from('missions').select('*').order('created_at', { ascending: false });
             if(data) document.getElementById('mission-list').innerHTML = data.map(m => `
@@ -164,9 +165,7 @@
         async function loadCrew() {
             const { data } = await supabase.from('operatives').select('*');
             if(data) document.getElementById('crew-list').innerHTML = data.map(c => `
-                <div class="p-3 border border-gold/10 text-[10px] uppercase tracking-widest text-zinc-400">
-                    ${c.alias} <span class="text-[7px] text-zinc-800 ml-2">(${c.id.substring(0,8)})</span>
-                </div>
+                <div class="p-3 border border-gold/10 text-[10px] uppercase tracking-widest text-zinc-400">${c.alias} <span class="text-[7px] text-zinc-800 ml-2">(${c.id.substring(0,8)})</span></div>
             `).join('');
         }
 
@@ -174,6 +173,12 @@
             const alias = document.getElementById('alias-in').value;
             if(!alias) return;
             await supabase.from('operatives').upsert([{ id: currentUser.id, alias }]);
+            closeModal();
+        }
+
+        function toggleKillSwitch() {
+            if (currentUser.id !== DIRECTOR_ID) return;
+            killSwitch = !killSwitch;
             closeModal();
         }
 
