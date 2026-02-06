@@ -3,201 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>M.O.G. | MANIFEST</title>
+    <title>M.O.G. | IDENTITY</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+
     <style>
-        :root { --gold: #D4AF37; --blue: #00d2ff; --bg: #050505; }
-        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
+        :root { --gold: #D4AF37; --bg: #050505; --panel: #0a0a0a; }
+        body { background-color: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
         .serif { font-family: 'Cinzel', serif; }
+        .gold-text { background: linear-gradient(to bottom, #fff 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        /* THE OFFICIAL EMBLEM */
-        .mog-emblem { 
-            width: 160px; height: 160px; margin: 0 auto 20px auto; 
-            border-radius: 50%;
-            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
-            border: 1px solid rgba(212, 175, 55, 0.2);
-        }
+        .glass-tile { background: var(--panel); border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; cursor: pointer; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; aspect-ratio: 1/1; }
+        .glass-tile:hover { border-color: var(--gold); transform: translateY(-3px); }
+        
+        /* Modal and Input Styling */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 200; backdrop-filter: blur(20px); }
+        .modal-content { background: #0c0c0c; border: 1px solid var(--gold); max-width: 420px; width: 90%; margin: 10vh auto; padding: 2.5rem; border-radius: 4px; position: relative; }
+        input { background: #000 !important; border: 1px solid rgba(212, 175, 55, 0.2) !important; color: #fff !important; text-transform: uppercase; letter-spacing: 2px; }
+        input:focus { border-color: var(--gold) !important; outline: none; }
 
-        /* GUARANTEED CLICKABLE GRID */
-        #main-grid { position: relative; z-index: 500 !important; }
-        .glass-tile { 
-            background: rgba(10, 10, 10, 0.95); 
-            border: 1px solid rgba(0, 210, 255, 0.2); 
-            box-shadow: inset 0 0 15px rgba(0, 210, 255, 0.05);
-            transition: 0.1s; 
-            cursor: pointer; 
-            display: flex; align-items: center; justify-content: center;
-            pointer-events: auto !important;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .glass-tile:active { 
-            transform: scale(0.94); 
-            border-color: var(--blue); 
-            box-shadow: 0 0 25px rgba(0, 210, 255, 0.4); 
-        }
-
-        .modal { 
-            display: none; position: fixed; inset: 0; 
-            background: rgba(0,0,0,0.98); z-index: 2000; 
-            backdrop-filter: blur(35px); align-items: center; 
-            justify-content: center; opacity: 0; transition: 0.2s; 
-        }
-        .modal.active { display: flex; opacity: 1; }
-        
-        .action-btn { 
-            width: 100%; border: 1px solid var(--blue); padding: 18px; 
-            font-size: 10px; font-weight: 900; letter-spacing: 0.2em; 
-            color: var(--blue); margin-bottom: 12px; background: transparent;
-            text-transform: uppercase;
-        }
-        .action-btn:active { background: var(--blue); color: #000; }
-        
-        input { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(0, 210, 255, 0.3) !important; color: #fff !important; padding: 14px; width: 100%; margin-bottom: 10px; outline: none; border-radius: 0; }
-        .text-link { font-size: 8px; color: var(--blue); text-transform: uppercase; letter-spacing: 1px; cursor: pointer; opacity: 0.6; display: block; margin-top: 5px; }
-        .director-tile { border: 1px double var(--gold) !important; box-shadow: 0 0 15px rgba(212, 175, 55, 0.2) !important; }
+        #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: fadeOut 1s ease 2s forwards; pointer-events: none; }
+        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+        #video-bg { position: fixed; inset: 0; z-index: -10; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; filter: grayscale(100%); }
     </style>
 </head>
 <body>
 
+    <div id="ritual-overlay">
+        <img src="logo.png" class="w-20 h-20 mb-4 animate-pulse">
+        <div class="text-[10px] tracking-[0.4em] text-gold uppercase opacity-60 font-mono">> ESTABLISHING SECURE IDENTITY...</div>
+    </div>
+
+    <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
+
     <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
-        <div class="text-[8px] tracking-[0.5em] text-blue-400">MINISTRY OF GROOVE</div>
-        <div class="text-[8px] tracking-[0.5em] text-zinc-600 uppercase" id="session-status">OFFLINE</div>
+        <div class="serif text-2xl gold-text tracking-tighter" onclick="location.reload()">M.O.G.</div>
+        <div class="flex items-center gap-2">
+            <div id="status-light" class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+            <span id="status-text" class="text-[8px] uppercase tracking-widest text-zinc-500">Signal: Offline</span>
+        </div>
     </nav>
 
-    <main class="relative pt-12 text-center z-10 flex flex-col justify-center h-full">
-        <img src="https://i.ibb.co/Lz0D79m/1000201660.jpg" alt="M.O.G. CABINET" class="mog-emblem">
-        
-        <h1 class="serif text-4xl text-[#D4AF37] mb-12 italic tracking-tighter shadow-black">MANIFEST</h1>
-        
-        <div class="max-w-sm mx-auto px-6 w-full" id="main-grid">
-            <div class="grid grid-cols-2 gap-4">
-                <div onclick="UI.open('auth')" class="glass-tile py-10">
-                    <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Identity</span>
-                </div>
-                <div onclick="UI.open('files')" class="glass-tile py-10">
-                    <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Binary Store</span>
-                </div>
-                <div onclick="UI.open('comms')" class="glass-tile py-10">
-                    <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Transmit</span>
-                </div>
-                <div onclick="UI.open('global')" class="glass-tile py-10">
-                    <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Global Log</span>
-                </div>
+    <main class="relative z-10 pt-28 px-8 max-w-lg mx-auto text-center h-screen overflow-y-auto pb-40">
+        <img src="logo.png" class="w-28 h-28 mx-auto mb-6 border border-gold/10 rounded-full">
+        <h1 class="serif text-5xl gold-text mb-1 italic">MANIFEST</h1>
+        <p class="text-[9px] tracking-[0.4em] text-zinc-500 mb-12 uppercase">Sovereign Command Interface</p>
+
+        <div class="grid grid-cols-2 gap-5">
+            <div onclick="openIdentity()" class="glass-tile">
+                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Identity</div>
+            </div>
+            <div class="glass-tile opacity-30 cursor-not-allowed">
+                <div class="text-[10px] tracking-widest uppercase font-bold text-zinc-500">Vault</div>
+            </div>
+            <div class="glass-tile opacity-30 cursor-not-allowed">
+                <div class="text-[10px] tracking-widest uppercase font-bold text-zinc-500">Crew</div>
+            </div>
+            <div class="glass-tile opacity-30 cursor-not-allowed">
+                <div class="text-[10px] tracking-widest uppercase font-bold text-zinc-500">Command</div>
             </div>
         </div>
     </main>
 
-    <div id="modal" class="modal">
-        <div class="p-10 w-full max-w-sm text-center">
-            <h2 id="m-title" class="serif text-3xl text-[#D4AF37] mb-2 italic"></h2>
-            <div id="m-body" class="text-[9px] tracking-[0.4em] text-blue-400 uppercase mb-8 border-b border-blue-900/30 pb-4"></div>
-            <div id="m-action-container"></div>
-            <button onclick="UI.close()" class="mt-8 text-[9px] text-zinc-600 tracking-[0.5em] uppercase hover:text-white underline">Close Connection</button>
+    <div id="modal-identity" class="modal">
+        <div class="modal-content">
+            <span class="absolute top-5 right-5 text-gold cursor-pointer text-xl" onclick="closeModal()">&times;</span>
+            <h2 class="serif text-3xl gold-text mb-2 italic">IDENTITY</h2>
+            <p class="text-[9px] text-zinc-500 mb-8 tracking-[0.3em] uppercase">Authentication Node</p>
+            
+            <div id="identity-flow">
+                <div id="step-register">
+                    <p class="text-zinc-400 text-[11px] mb-6 leading-relaxed">Establish your unique operative alias. This frequency will tether your biometric data to the Sovereign network.</p>
+                    <input type="text" id="alias-input" placeholder="ENTER ALIAS" class="w-full p-4 mb-4 text-center text-[12px] font-bold outline-none">
+                    <button onclick="handleRegistration()" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-widest">Establish Frequency →</button>
+                </div>
+
+                <div id="step-passport" class="hidden text-center">
+                    <div id="qr-container" class="inline-block p-3 bg-white mb-6 rounded"></div>
+                    <div id="display-alias" class="serif text-2xl gold-text mb-2 italic"></div>
+                    <p class="text-[9px] text-cyan-400 uppercase tracking-widest font-bold">Verified Operative</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        const S_URL = 'YOUR_SUPABASE_URL';
-        const S_KEY = 'YOUR_SUPABASE_ANON_KEY';
-        const supabase = window.supabase.createClient(S_URL, S_KEY);
+        const SUPABASE_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let currentUser = null;
 
-        const UI = {
-            open: (node) => {
-                const modal = document.getElementById('modal');
-                modal.style.display = 'flex';
-                setTimeout(() => modal.classList.add('active'), 10);
-                
-                if(node === 'auth') Auth.checkState();
-                if(node === 'files') Files.showGateway();
-                if(node === 'comms') Transmit.showGateway();
-                if(node === 'global') UI.render("GLOBAL LOG", "Network Feed", "<p class='text-zinc-600'>SCANNING...</p>");
-                if(node === 'director') Director.load();
-            },
-            close: () => {
-                const modal = document.getElementById('modal');
-                modal.classList.remove('active');
-                setTimeout(() => modal.style.display = 'none', 300);
-            },
-            render: (t, b, a = "") => {
-                document.getElementById('m-title').innerText = t;
-                document.getElementById('m-body').innerHTML = b;
-                document.getElementById('m-action-container').innerHTML = a;
-            }
+        // Initialize Identity Check
+        window.onload = async () => {
+            try {
+                const { data } = await supabase.auth.signInAnonymously();
+                currentUser = data.user;
+                document.getElementById('status-light').className = "w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_#00f2ff]";
+                document.getElementById('status-text').innerText = "Signal: Secure";
+                checkExistingIdentity();
+            } catch (e) { console.error("Identity Bridge Failed."); }
         };
 
-        const Auth = {
-            checkState: async () => {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    const { data: profile } = await supabase.from('operatives').select('alias').eq('id', user.id).single();
-                    UI.render("IDENTITY", `LOGGED IN: ${profile?.alias || 'OPERATIVE'}`, `
-                        <button onclick="supabase.auth.signOut().then(() => UI.close())" class="action-btn">Disconnect</button>
-                        <button onclick="Auth.handleDecommission()" class="action-btn !text-red-500 !border-red-500 mt-4 opacity-50">Decommission Profile</button>
-                    `);
-                } else {
-                    Auth.showGateway();
-                }
-            },
-            showGateway: () => {
-                UI.render("IDENTITY", "Access Logic", `
-                    <button onclick="Auth.showLogin()" class="action-btn">Reconnect (Login)</button>
-                    <button onclick="Auth.showRegister()" class="action-btn">Join Grid (Register)</button>
-                `);
-            },
-            showLogin: () => {
-                const savedEmail = localStorage.getItem('mog_email') || "";
-                UI.render("LOGIN", "Enter Credentials", `
-                    <input type="email" id="email" placeholder="EMAIL" value="${savedEmail}">
-                    <input type="password" id="pass" placeholder="PASSWORD">
-                    <button onclick="Auth.handleLogin()" class="action-btn !bg-blue-500 !text-black border-none">Connect</button>
-                    <span class="text-link" onclick="Auth.showForgot()">Forgot Password?</span>
-                    <span class="text-link" onclick="Auth.showGateway()">Back</span>
-                `);
-            },
-            showRegister: () => {
-                UI.render("REGISTER", "New Profile", `
-                    <input type="text" id="alias" placeholder="ALIAS">
-                    <input type="email" id="email" placeholder="EMAIL">
-                    <input type="password" id="pass" placeholder="PASSWORD">
-                    <button onclick="Auth.handleReg()" class="action-btn !bg-blue-500 !text-black border-none">Initialize</button>
-                    <span class="text-link" onclick="Auth.showGateway()">Back</span>
-                `);
-            },
-            handleLogin: async () => {
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('pass').value;
-                localStorage.setItem('mog_email', email);
-                const { error } = await supabase.auth.signInWithPassword({ email, password });
-                if(error) alert(error.message); else UI.close();
-            }
-        };
+        function openIdentity() { document.getElementById('modal-identity').style.display = 'block'; }
+        function closeModal() { document.getElementById('modal-identity').style.display = 'none'; }
 
-        const Files = {
-            showGateway: () => UI.render("VAULT", "Data Storage", `<button class="action-btn">Browse Assets</button><button class="action-btn">Upload Packet</button>`)
-        };
+        async function checkExistingIdentity() {
+            if(!currentUser) return;
+            const { data } = await supabase.from('operatives').select('alias').eq('id', currentUser.id).single();
+            if(data) { showPassport(data.alias); }
+        }
 
-        const Transmit = {
-            showGateway: () => UI.render("TRANSMIT", "P2P Link", `<button class="action-btn">Search Operatives</button><button class="action-btn">Encrypted Inbox</button>`)
-        };
+        async function handleRegistration() {
+            const alias = document.getElementById('alias-input').value.trim();
+            if(!alias || alias.length < 3) return alert("ALIAS TOO SHORT");
+            
+            const { error } = await supabase.from('operatives').upsert([{ id: currentUser.id, alias: alias }]);
+            if(!error) { showPassport(alias); } 
+            else { alert("SYNC ERROR: Try a different alias."); }
+        }
 
-        const Director = {
-            inject: () => {
-                if(document.getElementById('dir-tile')) return;
-                const grid = document.getElementById('main-grid');
-                const tile = document.createElement('div');
-                tile.id = 'dir-tile'; tile.className = 'glass-tile py-10 col-span-2 director-tile';
-                tile.onclick = () => UI.open('director');
-                tile.innerHTML = `<div class="text-[10px] font-black text-gold uppercase tracking-[0.3em]">Director Console</div>`;
-                grid.appendChild(tile);
-            }
-        };
-
-        supabase.auth.onAuthStateChange((e, s) => {
-            document.getElementById('session-status').innerText = s ? "ONLINE" : "OFFLINE";
-            if(s?.user?.email === 'director.mog@gmail.com') Director.inject();
-        });
+        function showPassport(alias) {
+            document.getElementById('step-register').classList.add('hidden');
+            document.getElementById('step-passport').classList.remove('hidden');
+            document.getElementById('display-alias').innerText = alias.toUpperCase();
+            document.getElementById('qr-container').innerHTML = "";
+            new QRCode(document.getElementById("qr-container"), {
+                text: `MOG-OPERATIVE-${currentUser.id}`,
+                width: 160, height: 160, colorDark: "#000", colorLight: "#fff"
+            });
+        }
     </script>
 </body>
 </html>
