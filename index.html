@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>M.O.G. | VAULT ACTIVE</title>
+    <title>M.O.G. | VAULT UPLINK</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -20,59 +20,49 @@
         .glass-tile:not(.locked):hover { border-color: var(--gold); transform: translateY(-3px); background: rgba(212, 175, 55, 0.05); }
         .locked { opacity: 0.2; cursor: not-allowed; }
         
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 200; backdrop-filter: blur(20px); }
-        .modal-content { background: #0c0c0c; border: 1px solid var(--gold); max-width: 450px; width: 90%; margin: 8vh auto; padding: 2rem; border-radius: 4px; position: relative; max-height: 80vh; overflow-y: auto; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 200; backdrop-filter: blur(20px); }
+        .modal-content { background: #0c0c0c; border: 1px solid var(--gold); max-width: 450px; width: 92%; margin: 5vh auto; padding: 1.5rem; border-radius: 4px; position: relative; max-height: 85vh; overflow-y: auto; }
         
-        .vault-grid { display: grid; grid-cols: 3; gap: 8px; }
-        .vault-item { aspect-ratio: 1/1; background: #111; border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 2px; overflow: hidden; }
+        /* Camera UI */
+        #camera-preview { width: 100%; aspect-ratio: 1/1; background: #000; border: 1px solid var(--gold); transform: scaleX(-1); object-fit: cover; }
+        .vault-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+        .vault-item { aspect-ratio: 1/1; background: #111; border: 1px solid rgba(212, 175, 55, 0.2); overflow: hidden; }
         .vault-item img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) contrast(1.2); }
 
-        #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: fadeOut 1s ease 2s forwards; pointer-events: none; }
-        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-        #video-bg { position: fixed; inset: 0; z-index: -10; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; filter: grayscale(100%); }
+        #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 1s; pointer-events: none; }
+        #video-bg { position: fixed; inset: 0; z-index: -10; width: 100%; height: 100%; object-fit: cover; opacity: 0.1; filter: grayscale(100%); }
     </style>
 </head>
-<body>
+<body class="bg-black text-white">
 
     <div id="ritual-overlay">
         <img src="logo.png" class="w-20 h-20 mb-4 animate-pulse">
-        <div class="text-[10px] tracking-[0.4em] text-gold uppercase opacity-60 font-mono">> UNLOCKING VAULT ARCHIVES...</div>
+        <div class="text-[10px] tracking-[0.4em] text-gold uppercase opacity-60 font-mono">> ENABLING OPTIC SENSORS...</div>
     </div>
 
     <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
 
-    <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50">
-        <div class="serif text-2xl gold-text tracking-tighter" onclick="location.reload()">M.O.G.</div>
-        <span id="status-text" class="text-[8px] uppercase tracking-widest text-cyan-400 font-bold">Signal: Secure</span>
-    </nav>
-
-    <main class="relative z-10 pt-28 px-8 max-w-lg mx-auto text-center h-screen overflow-y-auto pb-40">
-        <img src="logo.png" class="w-24 h-24 mx-auto mb-6 border border-gold/10 rounded-full">
+    <main class="relative z-10 pt-24 px-8 max-w-lg mx-auto text-center h-screen overflow-y-auto">
+        <img src="logo.png" class="w-20 h-20 mx-auto mb-4 opacity-80">
         <h1 class="serif text-5xl gold-text mb-1 italic">MANIFEST</h1>
-        <p class="text-[9px] tracking-[0.4em] text-zinc-500 mb-12 uppercase">Sovereign Command Interface</p>
+        <p class="text-[9px] tracking-[0.4em] text-zinc-600 mb-10 uppercase font-bold">Sovereign Command</p>
 
-        <div class="grid grid-cols-2 gap-5">
+        <div class="grid grid-cols-2 gap-4">
             <div onclick="openNode('identity')" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Identity</div>
+                <div class="text-[9px] tracking-widest uppercase font-bold text-gold">Identity</div>
             </div>
-            <div onclick="openNode('vault')" id="vault-tile" class="glass-tile">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-gold">Vault</div>
+            <div onclick="openNode('vault')" class="glass-tile">
+                <div class="text-[9px] tracking-widest uppercase font-bold text-gold">Vault</div>
             </div>
-            <div class="glass-tile locked">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-zinc-500">Crew</div>
-            </div>
-            <div class="glass-tile locked">
-                <div class="text-[10px] tracking-widest uppercase font-bold text-zinc-500">Command</div>
-            </div>
+            <div class="glass-tile locked"><div class="text-[9px] uppercase font-bold text-zinc-600">Crew</div></div>
+            <div class="glass-tile locked"><div class="text-[9px] uppercase font-bold text-zinc-600">Missions</div></div>
         </div>
     </main>
 
-    <div id="node-modal" class="modal" onclick="closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <span class="absolute top-5 right-5 text-gold cursor-pointer text-xl" onclick="closeModal()">&times;</span>
-            <h2 id="modal-title" class="serif text-3xl gold-text mb-2 italic uppercase"></h2>
-            <p id="modal-subtitle" class="text-[9px] text-zinc-500 mb-8 tracking-[0.3em] uppercase"></p>
-            
+    <div id="node-modal" class="modal">
+        <div class="modal-content">
+            <span class="absolute top-4 right-4 text-gold cursor-pointer text-2xl font-light" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title" class="serif text-2xl gold-text mb-4 italic uppercase"></h2>
             <div id="modal-body"></div>
         </div>
     </div>
@@ -81,49 +71,68 @@
         const SUPABASE_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        let currentUser = null;
+        let stream = null;
 
-        window.onload = async () => {
-            const { data } = await supabase.auth.signInAnonymously();
-            currentUser = data.user;
+        window.onload = () => {
+            setTimeout(() => { document.getElementById('ritual-overlay').style.opacity = '0'; }, 2000);
         };
 
         function openNode(type) {
-            const modal = document.getElementById('node-modal');
-            const title = document.getElementById('modal-title');
-            const sub = document.getElementById('modal-subtitle');
             const body = document.getElementById('modal-body');
+            document.getElementById('modal-title').innerText = type;
 
-            if(type === 'identity') {
-                title.innerText = "Identity";
-                sub.innerText = "Authentication Node";
+            if(type === 'vault') {
                 body.innerHTML = `
-                    <input type="text" id="alias-input" placeholder="ENTER ALIAS" class="w-full bg-black border border-gold/20 p-4 mb-4 text-center text-white outline-none">
-                    <button onclick="saveAlias()" class="w-full py-4 bg-gold text-black font-bold uppercase text-[10px]">Verify →</button>
-                    <div id="qr-space" class="mt-6 text-center"></div>
-                `;
-            } else if(type === 'vault') {
-                title.innerText = "Vault";
-                sub.innerText = "Intelligence Archive";
-                body.innerHTML = `
-                    <div class="grid grid-cols-3 gap-2 mb-8" id="gallery-box">
-                        <div class="vault-item"></div><div class="vault-item"></div><div class="vault-item"></div>
+                    <div class="relative mb-4">
+                        <video id="camera-preview" autoplay playsinline></video>
+                        <div class="absolute inset-0 border-[20px] border-black/20 pointer-events-none"></div>
                     </div>
-                    <button class="w-full py-4 border border-gold/40 text-gold font-bold uppercase text-[10px] opacity-50">Uplink Restricted</button>
-                    <p class="text-[8px] text-zinc-600 mt-4 text-center">ENCRYPTED STORAGE ACTIVE // DIRECTOR CLEARANCE REQUIRED FOR UPLOAD</p>
+                    <button onclick="capturePhoto()" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-[0.2em] mb-6">Capture Intelligence</button>
+                    <div class="vault-grid" id="vault-items"></div>
                 `;
+                startCamera();
+                loadVault();
             }
-            modal.style.display = 'block';
+            document.getElementById('node-modal').style.display = 'block';
         }
 
-        function closeModal() { document.getElementById('node-modal').style.display = 'none'; }
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                document.getElementById('camera-preview').srcObject = stream;
+            } catch (e) { alert("Optic Access Denied"); }
+        }
 
-        async function saveAlias() {
-            const alias = document.getElementById('alias-input').value;
-            const { error } = await supabase.from('operatives').upsert([{ id: currentUser.id, alias }]);
+        function closeModal() {
+            if(stream) stream.getTracks().forEach(t => t.stop());
+            document.getElementById('node-modal').style.display = 'none';
+        }
+
+        async function capturePhoto() {
+            const video = document.getElementById('camera-preview');
+            const canvas = document.createElement('canvas');
+            canvas.width = 600; canvas.height = 600;
+            const ctx = canvas.getContext('2d');
+            ctx.filter = 'grayscale(100%) contrast(120%)';
+            ctx.drawImage(video, 0, 0, 600, 600);
+            
+            const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.8));
+            const fileName = `intel_${Date.now()}.jpg`;
+
+            const { data, error } = await supabase.storage.from('vault').upload(fileName, blob);
             if(!error) {
-                document.getElementById('qr-space').innerHTML = "";
-                new QRCode(document.getElementById("qr-space"), { text: alias, width: 120, height: 120 });
+                const { data: { publicUrl } } = supabase.storage.from('vault').getPublicUrl(fileName);
+                await supabase.from('gallery').insert([{ image_url: publicUrl }]);
+                loadVault();
+            }
+        }
+
+        async function loadVault() {
+            const { data } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
+            if(data) {
+                document.getElementById('vault-items').innerHTML = data.map(img => `
+                    <div class="vault-item"><img src="${img.image_url}"></div>
+                `).join('');
             }
         }
     </script>
