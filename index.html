@@ -27,19 +27,22 @@
 
         #ritual-overlay { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 1s; pointer-events: none; }
         #video-bg { position: fixed; inset: 0; z-index: -10; width: 100%; height: 100%; object-fit: cover; opacity: 0.1; filter: grayscale(100%); }
+        
+        .error-flash { border-color: #ff4444 !important; color: #ff4444 !important; animation: shake 0.2s ease-in-out 0s 2; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
     </style>
 </head>
 <body>
 
     <div id="ritual-overlay">
-        <img src="logo.png" class="w-20 h-20 mb-4 animate-pulse">
+        <img src="logo.png" class="w-20 h-20 mb-4 animate-pulse" onerror="this.src='https://via.placeholder.com/80?text=MOG'">
         <div class="text-[10px] tracking-[0.4em] text-gold uppercase opacity-60 font-mono">> SYNCHRONIZING COMMAND HUB...</div>
     </div>
 
     <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
 
     <main class="relative z-10 pt-24 px-8 max-w-lg mx-auto text-center h-screen overflow-y-auto">
-        <img src="logo.png" class="w-20 h-20 mx-auto mb-4 opacity-80">
+        <img src="logo.png" class="w-20 h-20 mx-auto mb-4 opacity-80" onerror="this.style.display='none'">
         <h1 class="serif text-5xl gold-text mb-1 italic">MANIFEST</h1>
         <p class="text-[9px] tracking-[0.4em] text-zinc-600 mb-10 uppercase font-bold">Sovereign Command</p>
 
@@ -71,11 +74,17 @@
         const SUPABASE_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // DIRECTOR CLEARANCE CONFIGURATION
+        const DIRECTOR_ID = "YOUR_DIRECTOR_ID_HERE"; // Replace with your UUID after first login
         let currentUser;
 
         window.onload = () => {
             setTimeout(() => { document.getElementById('ritual-overlay').style.opacity = '0'; }, 2000);
-            supabase.auth.signInAnonymously().then(res => { currentUser = res.data.user; });
+            supabase.auth.signInAnonymously().then(res => { 
+                currentUser = res.data.user; 
+                console.log("COMMAND SIGNATURE:", currentUser.id);
+            });
         };
 
         function openNode(type) {
@@ -84,21 +93,64 @@
 
             if(type === 'missions') {
                 body.innerHTML = `
+                    <div id="auth-status" class="text-[8px] mb-2 tracking-widest uppercase opacity-50">Checking Clearance...</div>
                     <textarea id="mission-in" placeholder="ENTER NEW DIRECTIVE..." class="w-full bg-black border border-gold/20 p-4 mb-4 text-[11px] text-white outline-none h-24"></textarea>
-                    <button onclick="postMission()" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-widest mb-8">Broadcast Directive</button>
+                    <button id="post-btn" onclick="postMission()" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-widest mb-8">Broadcast Directive</button>
                     <div id="mission-list"></div>
                 `;
+                checkClearance();
                 loadMissions();
             } else if(type === 'identity') {
-                body.innerHTML = `<input type="text" id="alias-in" placeholder="OPERATIVE ALIAS" class="w-full bg-black border border-gold/20 p-4 mb-4 text-center text-white outline-none"><button onclick="reg()" class="w-full py-4 bg-gold text-black font-bold uppercase text-[10px]">Verify Identity</button>`;
+                body.innerHTML = `
+                    <p class="text-[10px] text-zinc-500 mb-4 uppercase tracking-tighter">Current Signature: ${currentUser.id}</p>
+                    <input type="text" id="alias-in" placeholder="OPERATIVE ALIAS" class="w-full bg-black border border-gold/20 p-4 mb-4 text-center text-white outline-none">
+                    <button onclick="reg()" class="w-full py-4 bg-gold text-black font-bold uppercase text-[10px]">Verify Identity</button>`;
+            } else if(type === 'vault') {
+                body.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <p class="text-[10px] text-gold mb-6 uppercase tracking-widest text-center">Director MFA Key Generation</p>
+                        <div id="qrcode" class="p-2 bg-white rounded"></div>
+                        <p class="text-[9px] text-zinc-500 mt-6 uppercase text-center">Scan with Authenticator to lock Director access to this device.</p>
+                    </div>
+                `;
+                setTimeout(() => {
+                    new QRCode(document.getElementById("qrcode"), {
+                        text: `otpauth://totp/MOG:Director?secret=MOGCOMMAND777&issuer=MOG`,
+                        width: 160,
+                        height: 160
+                    });
+                }, 100);
             }
             document.getElementById('node-modal').style.display = 'block';
         }
 
+        function checkClearance() {
+            const status = document.getElementById('auth-status');
+            const btn = document.getElementById('post-btn');
+            if (currentUser.id === DIRECTOR_ID) {
+                status.innerText = "DIRECTOR CLEARANCE: GRANTED";
+                status.classList.add('text-gold');
+            } else {
+                status.innerText = "OPERATIVE STATUS: READ-ONLY";
+                btn.style.opacity = "0.3";
+            }
+        }
+
         async function postMission() {
+            if (currentUser.id !== DIRECTOR_ID) {
+                const btn = document.getElementById('post-btn');
+                btn.innerText = "ERROR 403: INSUFFICIENT CLEARANCE";
+                btn.classList.add('error-flash');
+                setTimeout(() => { 
+                    btn.innerText = "Broadcast Directive"; 
+                    btn.classList.remove('error-flash');
+                }, 2000);
+                return;
+            }
+
             const content = document.getElementById('mission-in').value;
             if(!content) return;
-            await supabase.from('missions').insert([{ content }]);
+            await supabase.from('missions').insert([{ content, author: currentUser.id }]);
             document.getElementById('mission-in').value = "";
             loadMissions();
         }
@@ -108,7 +160,7 @@
             document.getElementById('mission-list').innerHTML = data.map(m => `
                 <div class="mission-card">
                     <div class="text-[10px] text-white tracking-wide leading-relaxed">${m.content}</div>
-                    <div class="text-[7px] text-gold/50 mt-3 uppercase tracking-widest">${new Date(m.created_at).toLocaleString()}</div>
+                    <div class="text-[7px] text-gold/50 mt-3 uppercase tracking-widest">${new Date(m.created_at).toLocaleString()} | SOURCE: ${m.author === DIRECTOR_ID ? 'DIRECTOR' : 'OPERATIVE'}</div>
                 </div>
             `).join('');
         }
