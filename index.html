@@ -35,16 +35,14 @@
 <body>
 
     <div id="ritual-overlay">
-        <img src="logo.png" class="w-20 h-20 mb-4 animate-pulse" onerror="this.src='https://via.placeholder.com/80?text=MOG'">
-        <div class="text-[10px] tracking-[0.4em] text-gold uppercase opacity-60 font-mono">> SYNCHRONIZING COMMAND HUB...</div>
+        <div class="text-[10px] tracking-[0.4em] text-gold uppercase opacity-60 font-mono animate-pulse">> INITIALIZING DIRECTOR PROTOCOLS...</div>
     </div>
 
     <video id="video-bg" autoplay muted loop playsinline><source src="1000211769.mp4" type="video/mp4"></video>
 
     <main class="relative z-10 pt-24 px-8 max-w-lg mx-auto text-center h-screen overflow-y-auto">
-        <img src="logo.png" class="w-20 h-20 mx-auto mb-4 opacity-80" onerror="this.style.display='none'">
         <h1 class="serif text-5xl gold-text mb-1 italic">MANIFEST</h1>
-        <p class="text-[9px] tracking-[0.4em] text-zinc-600 mb-10 uppercase font-bold">Sovereign Command</p>
+        <p class="text-[9px] tracking-[0.4em] text-zinc-600 mb-10 uppercase font-bold">Sovereign Command Hub</p>
 
         <div class="grid grid-cols-2 gap-4">
             <div onclick="openNode('identity')" class="glass-tile">
@@ -75,8 +73,10 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53YXJpZHN1b3F4ZHVuZmltZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNzk2MzgsImV4cCI6MjA4NTg1NTYzOH0.tVYmN3lq7bbpgggX0AOVOqW88Y2Q0cvGSpmo3CW3KeE';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        // DIRECTOR CLEARANCE CONFIGURATION
-        const DIRECTOR_ID = "YOUR_DIRECTOR_ID_HERE"; // Replace with your UUID after first login
+        /* DIRECTOR CLEARANCE: 
+           Paste your UUID inside the quotes below once you find it in the 'Identity' tab.
+        */
+        const DIRECTOR_ID = "YOUR_DIRECTOR_ID_HERE"; 
         let currentUser;
 
         window.onload = () => {
@@ -93,8 +93,8 @@
 
             if(type === 'missions') {
                 body.innerHTML = `
-                    <div id="auth-status" class="text-[8px] mb-2 tracking-widest uppercase opacity-50">Checking Clearance...</div>
-                    <textarea id="mission-in" placeholder="ENTER NEW DIRECTIVE..." class="w-full bg-black border border-gold/20 p-4 mb-4 text-[11px] text-white outline-none h-24"></textarea>
+                    <div id="auth-status" class="text-[8px] mb-2 tracking-widest uppercase opacity-50 font-mono">Verifying Credentials...</div>
+                    <textarea id="mission-in" placeholder="ENTER NEW DIRECTIVE..." class="w-full bg-black border border-gold/20 p-4 mb-4 text-[11px] text-white outline-none h-24 focus:border-gold/50"></textarea>
                     <button id="post-btn" onclick="postMission()" class="w-full py-4 bg-gold text-black font-black uppercase text-[10px] tracking-widest mb-8">Broadcast Directive</button>
                     <div id="mission-list"></div>
                 `;
@@ -102,22 +102,27 @@
                 loadMissions();
             } else if(type === 'identity') {
                 body.innerHTML = `
-                    <p class="text-[10px] text-zinc-500 mb-4 uppercase tracking-tighter">Current Signature: ${currentUser.id}</p>
-                    <input type="text" id="alias-in" placeholder="OPERATIVE ALIAS" class="w-full bg-black border border-gold/20 p-4 mb-4 text-center text-white outline-none">
-                    <button onclick="reg()" class="w-full py-4 bg-gold text-black font-bold uppercase text-[10px]">Verify Identity</button>`;
+                    <div class="text-center">
+                        <p class="text-[9px] text-zinc-500 mb-2 uppercase tracking-widest">Active Network Signature:</p>
+                        <div class="bg-black border border-gold/20 p-3 mb-6 font-mono text-[10px] break-all text-gold select-all">
+                            ${currentUser ? currentUser.id : "AUTHENTICATING..."}
+                        </div>
+                        <p class="text-[8px] text-zinc-600 mb-6 italic leading-relaxed px-4">"Copy this signature and paste it into the DIRECTOR_ID variable in your source code to claim total command."</p>
+                        <input type="text" id="alias-in" placeholder="OPERATIVE ALIAS" class="w-full bg-black border border-gold/20 p-4 mb-4 text-center text-white outline-none">
+                        <button onclick="reg()" class="w-full py-4 bg-gold text-black font-bold uppercase text-[10px]">Verify Identity</button>
+                    </div>`;
             } else if(type === 'vault') {
                 body.innerHTML = `
-                    <div class="flex flex-col items-center">
-                        <p class="text-[10px] text-gold mb-6 uppercase tracking-widest text-center">Director MFA Key Generation</p>
-                        <div id="qrcode" class="p-2 bg-white rounded"></div>
-                        <p class="text-[9px] text-zinc-500 mt-6 uppercase text-center">Scan with Authenticator to lock Director access to this device.</p>
+                    <div class="flex flex-col items-center py-4">
+                        <p class="text-[10px] text-gold mb-6 uppercase tracking-widest text-center">Director MFA Shield</p>
+                        <div id="qrcode" class="p-2 bg-white rounded shadow-[0_0_15px_rgba(212,175,55,0.3)]"></div>
+                        <p class="text-[9px] text-zinc-500 mt-8 uppercase text-center leading-relaxed">Scan with Authenticator App.<br>Level 2 encryption active.</p>
                     </div>
                 `;
                 setTimeout(() => {
                     new QRCode(document.getElementById("qrcode"), {
                         text: `otpauth://totp/MOG:Director?secret=MOGCOMMAND777&issuer=MOG`,
-                        width: 160,
-                        height: 160
+                        width: 160, height: 160
                     });
                 }, 100);
             }
@@ -128,11 +133,11 @@
             const status = document.getElementById('auth-status');
             const btn = document.getElementById('post-btn');
             if (currentUser.id === DIRECTOR_ID) {
-                status.innerText = "DIRECTOR CLEARANCE: GRANTED";
+                status.innerText = "> ACCESS GRANTED: DIRECTOR STATUS DETECTED";
                 status.classList.add('text-gold');
             } else {
-                status.innerText = "OPERATIVE STATUS: READ-ONLY";
-                btn.style.opacity = "0.3";
+                status.innerText = "> ACCESS RESTRICTED: OPERATIVE READ-ONLY MODE";
+                btn.classList.add('opacity-30');
             }
         }
 
@@ -150,7 +155,7 @@
 
             const content = document.getElementById('mission-in').value;
             if(!content) return;
-            await supabase.from('missions').insert([{ content, author: currentUser.id }]);
+            await supabase.from('missions').insert([{ content, author: 'DIRECTOR' }]);
             document.getElementById('mission-in').value = "";
             loadMissions();
         }
@@ -160,13 +165,14 @@
             document.getElementById('mission-list').innerHTML = data.map(m => `
                 <div class="mission-card">
                     <div class="text-[10px] text-white tracking-wide leading-relaxed">${m.content}</div>
-                    <div class="text-[7px] text-gold/50 mt-3 uppercase tracking-widest">${new Date(m.created_at).toLocaleString()} | SOURCE: ${m.author === DIRECTOR_ID ? 'DIRECTOR' : 'OPERATIVE'}</div>
+                    <div class="text-[7px] text-gold/50 mt-3 uppercase tracking-widest">${new Date(m.created_at).toLocaleString()} | SOURCE: ${m.author || 'OPERATIVE'}</div>
                 </div>
             `).join('');
         }
 
         async function reg() {
             const alias = document.getElementById('alias-in').value;
+            if(!alias) return;
             await supabase.from('operatives').upsert([{ id: currentUser.id, alias }]);
             closeModal();
         }
