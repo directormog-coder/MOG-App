@@ -1,26 +1,56 @@
-// INTEGRATED COORDINATES
-const SUPABASE_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Keep your full key here
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ministry of Groove</title>
+    <link href="./output.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-black text-green-500 font-mono">
 
-// FIX: Changed 'const' to 'window.supabaseClient' to avoid declaration crashes
-window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <div id="terminal-modal" class="p-10">
+        <div id="terminal-log"></div>
+        <button onclick="openNode()" class="mt-4 border border-green-500 p-2 hover:bg-green-500 hover:text-black">
+            ACCESS NODE
+        </button>
+    </div>
 
-let currentUser;
+    <script>
+        // INTEGRATED COORDINATES
+        const SUPABASE_URI = 'https://nwaridsuoqxdunfimele.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Ensure this is your full key
 
-async function init() {
-    const log = document.getElementById('terminal-log');
-    const lines = ["> AUDITING CORE...", "> SHIELDING BIOMETRICS...", "> READY."];
-    for (let line of lines) {
-        let d = document.createElement('div');
-        d.className = 'terminal-text';
-        d.innerText = line;
-        log.appendChild(d);
-        await new Promise(r => setTimeout(r, 300));
-    }
-}
+        // FIX: Using window.supabaseClient prevents "already declared" errors
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URI, SUPABASE_KEY);
 
-// Ensure you have this function defined to fix the "openNode is not defined" error
-function openNode() {
-    console.log("M.O.G. Terminal Node Accessed");
-    // Add your menu or modal logic here
-}
+        const MASTER_PASS = '7486';
+        let currentUser;
+
+        async function init() {
+            const log = document.getElementById('terminal-log');
+            const lines = ["> AUDITING CORE...", "> SHIELDING BIOMETRICS...", "> READY."];
+            
+            if (log) {
+                for (let line of lines) {
+                    let d = document.createElement('div');
+                    d.className = 'terminal-text mb-1';
+                    d.innerText = line;
+                    log.appendChild(d);
+                    await new Promise(r => setTimeout(r, 300));
+                }
+            }
+        }
+
+        // Fixes the "openNode is not defined" error
+        function openNode() {
+            console.log("M.O.G. Terminal Node Accessed");
+            alert("Node Access Granted. System Stable.");
+            // Add your modal logic here
+        }
+
+        // Initialize on load
+        window.onload = init;
+    </script>
+</body>
+</html>
