@@ -1,38 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Ministry of Groove</title>
-    <link rel="stylesheet" href="output.css">
-</head>
-<body class="bg-black text-white">
+// INTEGRATED COORDINATES
+const SUPABASE_URL = 'https://nwaridsuoqxdunfimele.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Keep your full key here
 
-    <script>
-        // 1. FIXED SUPABASE CLASH
-        // Instead of 'const supabase', we attach it to the window 
-        // to avoid "Already Declared" errors.
-        const SUPABASE_URI = 'https://nwaridsuoqxdunfimele.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Use your full key here
+// FIX: Changed 'const' to 'window.supabaseClient' to avoid declaration crashes
+window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        if (!window.supabaseClient) {
-            window.supabaseClient = window.supabase.createClient(SUPABASE_URI, SUPABASE_KEY);
-        }
+let currentUser;
 
-        // 2. FIXED MISSING FUNCTION
-        // Added the missing openNode function that was causing errors
-        function openNode() {
-            console.log("M.O.G. Menu Accessed");
-            // Add your menu opening logic here
-        }
+async function init() {
+    const log = document.getElementById('terminal-log');
+    const lines = ["> AUDITING CORE...", "> SHIELDING BIOMETRICS...", "> READY."];
+    for (let line of lines) {
+        let d = document.createElement('div');
+        d.className = 'terminal-text';
+        d.innerText = line;
+        log.appendChild(d);
+        await new Promise(r => setTimeout(r, 300));
+    }
+}
 
-        // Your existing init() and other functions...
-        async function init() {
-            console.log("> AUDITING CORE...");
-            // ... rest of your code
-        }
-
-        window.onload = init;
-    </script>
-</body>
-</html>
+// Ensure you have this function defined to fix the "openNode is not defined" error
+function openNode() {
+    console.log("M.O.G. Terminal Node Accessed");
+    // Add your menu or modal logic here
+}
